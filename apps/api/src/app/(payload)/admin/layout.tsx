@@ -11,8 +11,7 @@ type Args = { children: React.ReactNode }
 
 const serverFunction: ServerFunctionClient = async function (args) {
   'use server'
-  // @ts-ignore - internal payload utility
-  const { handleServerFunctions } = await import('@payloadcms/next/dist/utilities/handleServerFunctions.js')
+  const { handleServerFunctions } = await import('@payloadcms/next/layouts')
   return handleServerFunctions({ ...args, config, importMap })
 }
 

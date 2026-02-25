@@ -1,7 +1,7 @@
 # ============================================
-# Stage 1: Install dependencies
+# Stage 1: Build the application
 # ============================================
-FROM node:20-alpine AS deps
+FROM node:20-alpine AS builder
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
@@ -18,23 +18,8 @@ COPY packages/shared/package.json ./packages/shared/package.json
 COPY apps/api/package.json ./apps/api/package.json
 COPY apps/web/package.json ./apps/web/package.json
 
-# Install all dependencies (including dev for build stage)
+# Install all dependencies
 RUN pnpm install --frozen-lockfile
-
-# ============================================
-# Stage 2: Build the application
-# ============================================
-FROM node:20-alpine AS builder
-
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-WORKDIR /app
-
-# Copy workspace config
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-
-# Copy all installed dependencies from deps stage
-COPY --from=deps /app/ ./
 
 # Copy and build shared package first
 COPY packages/shared/ ./packages/shared/
@@ -47,7 +32,7 @@ COPY apps/api/ ./apps/api/
 RUN cd apps/api && NODE_OPTIONS='--no-deprecation' npx next build
 
 # ============================================
-# Stage 3: Production runtime
+# Stage 2: Production runtime
 # ============================================
 FROM node:20-alpine AS runner
 

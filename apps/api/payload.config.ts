@@ -123,11 +123,15 @@ export default buildConfig({
     await seedDemoData(payload)
   },
 
+  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+
   cors: [
     process.env.FRONTEND_URL || 'http://localhost:3001',
-  ],
+    process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+  ].filter(Boolean),
 
   csrf: [
     process.env.FRONTEND_URL || 'http://localhost:3001',
-  ],
+    process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+  ].filter(Boolean),
 })

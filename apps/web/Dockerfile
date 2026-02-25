@@ -30,11 +30,8 @@ WORKDIR /app
 # Copy workspace config
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 
-# Copy installed dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+# Copy all installed dependencies from deps stage
+COPY --from=deps /app/ ./
 
 # Copy and build shared package first
 COPY packages/shared/ ./packages/shared/

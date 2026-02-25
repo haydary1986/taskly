@@ -17,7 +17,7 @@
     "cross-env": "^7",
     "graphql": "^16",
     "jsonwebtoken": "^9",
-    "next": "^15",
+    "next": "15.4.11",
     "payload": "^3",
     "react": "^19",
     "react-dom": "^19",

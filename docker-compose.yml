@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # ============================================
   # MongoDB
@@ -28,6 +26,8 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      args:
+        PAYLOAD_SECRET: ${PAYLOAD_SECRET:-build-time-secret}
     container_name: taskly-api
     restart: unless-stopped
     ports:

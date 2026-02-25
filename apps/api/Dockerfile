@@ -28,6 +28,12 @@ RUN pnpm --filter @taskly/shared build
 # Copy API source
 COPY apps/api/ ./apps/api/
 
+# Payload CMS needs these at build time
+ARG PAYLOAD_SECRET=build-time-secret
+ARG DATABASE_URL=mongodb://localhost:27017/taskly
+ENV PAYLOAD_SECRET=${PAYLOAD_SECRET}
+ENV DATABASE_URL=${DATABASE_URL}
+
 # Build Next.js + Payload CMS
 RUN cd apps/api && NODE_OPTIONS='--no-deprecation' npx next build
 

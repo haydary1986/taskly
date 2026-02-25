@@ -27,7 +27,7 @@ export async function seedDemoData(payload: Payload) {
   for (const u of demoUsers) {
     const user = await payload.create({
       collection: 'users',
-      data: { ...u, password: DEMO_PASSWORD, isActive: true },
+      data: { ...u, password: DEMO_PASSWORD, isActive: true } as any,
       overrideAccess: true,
     })
     createdUsers[u.role] = user.id
@@ -110,7 +110,7 @@ export async function seedDemoData(payload: Payload) {
   for (const t of tasks) {
     await payload.create({
       collection: 'tasks',
-      data: { ...t, assignedBy: adminId },
+      data: { ...t, assignedBy: adminId } as any,
       overrideAccess: true,
     })
   }
@@ -132,7 +132,7 @@ export async function seedDemoData(payload: Payload) {
   for (const c of clients) {
     await payload.create({
       collection: 'clients',
-      data: { ...c, createdBy: salesId },
+      data: { ...c, createdBy: salesId } as any,
       overrideAccess: true,
     })
   }

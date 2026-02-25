@@ -1,0 +1,25 @@
+/* THIS FILE WAS GENERATED AUTOMATICALLY BY PAYLOAD. */
+/* DO NOT MODIFY IT BECAUSE IT COULD BE REWRITTEN AT ANY TIME. */
+import type { ServerFunctionClient } from 'payload'
+import config from '@payload-config'
+import { RootLayout } from '@payloadcms/next/layouts'
+import React from 'react'
+import { importMap } from './importMap'
+import '@payloadcms/next/css'
+
+type Args = { children: React.ReactNode }
+
+const serverFunction: ServerFunctionClient = async function (args) {
+  'use server'
+  // @ts-ignore - internal payload utility
+  const { handleServerFunctions } = await import('@payloadcms/next/dist/utilities/handleServerFunctions.js')
+  return handleServerFunctions({ ...args, config, importMap })
+}
+
+const Layout = ({ children }: Args) => (
+  <RootLayout config={config} importMap={importMap} serverFunction={serverFunction}>
+    {children}
+  </RootLayout>
+)
+
+export default Layout

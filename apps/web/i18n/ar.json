@@ -1,0 +1,86 @@
+{
+  "app": {
+    "name": "Taskly",
+    "company": "ALGO-NEST"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "tasks": "إدارة المهام",
+    "myTasks": "مهامي",
+    "kanban": "كانبان",
+    "projects": "المشاريع",
+    "timeTracking": "تتبع الوقت",
+    "checkIn": "إثبات الحضور",
+    "visits": "سجل الزيارات",
+    "myVisits": "زياراتي",
+    "routeReport": "تقرير المسار",
+    "clients": "العملاء",
+    "codeReview": "مراجعة الكود",
+    "designs": "طلبات التصميم",
+    "myDesigns": "تصاميمي",
+    "chat": "المحادثات",
+    "notifications": "الإشعارات",
+    "users": "المستخدمين",
+    "security": "مركز الأمان",
+    "settings": "إعدادات النظام",
+    "profile": "الملف الشخصي",
+    "kpi": "مؤشرات الأداء",
+    "map": "الخريطة التفاعلية",
+    "reports": "التقارير",
+    "files": "إدارة الملفات"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "filter": "تصفية",
+    "loading": "جاري التحميل...",
+    "noData": "لا توجد بيانات",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "logout": "خروج",
+    "submit": "إرسال",
+    "close": "إغلاق"
+  },
+  "status": {
+    "new": "جديدة",
+    "inProgress": "قيد التنفيذ",
+    "inReview": "مراجعة",
+    "completed": "مكتملة",
+    "cancelled": "ملغاة"
+  },
+  "priority": {
+    "urgent": "عاجل",
+    "high": "عالي",
+    "medium": "متوسط",
+    "low": "منخفض"
+  },
+  "roles": {
+    "superAdmin": "مدير عام",
+    "supervisor": "مشرف",
+    "auditor": "مراقب",
+    "salesRep": "مندوب مبيعات",
+    "programmer": "مبرمج",
+    "designer": "مصمم",
+    "socialMediaManager": "مسؤول سوشيال ميديا"
+  },
+  "dashboard": {
+    "welcome": "مرحباً",
+    "activeEmployees": "الموظفون النشطون",
+    "activeTasks": "المهام النشطة",
+    "activeProjects": "المشاريع النشطة",
+    "completedTasks": "مكتملة",
+    "visitsToday": "زيارات اليوم",
+    "taskDistribution": "توزيع المهام حسب الحالة",
+    "taskPriority": "المهام حسب الأولوية",
+    "projectStatus": "حالة المشاريع",
+    "weeklyPerformance": "الأداء الأسبوعي",
+    "tasksByType": "المهام حسب النوع",
+    "topPerformers": "أفضل الموظفين هذا الشهر",
+    "recentTasks": "آخر المهام",
+    "overdueTasks": "مهام متأخرة"
+  }
+}

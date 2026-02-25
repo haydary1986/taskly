@@ -1,0 +1,33 @@
+# Dependencies (installed inside container)
+node_modules
+**/node_modules
+
+# Build outputs (built inside container)
+.next
+.nuxt
+.output
+dist
+.turbo
+
+# Environment files (injected via docker-compose)
+.env
+.env.local
+.env.production
+**/.env
+**/.env.local
+
+# Media uploads (mounted as volume)
+apps/api/media/
+
+# IDE / OS
+.DS_Store
+**/.DS_Store
+.vscode
+.idea
+
+# Git
+.git
+.gitignore
+
+# Misc
+*.log

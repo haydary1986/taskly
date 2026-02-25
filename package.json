@@ -1,0 +1,23 @@
+{
+  "name": "taskly",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "dev:api": "pnpm --filter @taskly/api dev",
+    "dev:web": "pnpm --filter @taskly/web dev",
+    "build:api": "pnpm --filter @taskly/api build",
+    "build:web": "pnpm --filter @taskly/web build"
+  },
+  "devDependencies": {
+    "turbo": "^2.8.10"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "@parcel/watcher",
+      "vue-demi"
+    ]
+  }
+}

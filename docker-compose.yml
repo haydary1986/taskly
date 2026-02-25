@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  # ============================================
+  # MongoDB
+  # ============================================
+  mongo:
+    image: mongo:7
+    container_name: taskly-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - taskly-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================
+  # API (Next.js + Payload CMS + Socket.io)
+  # ============================================
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: taskly-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mongodb://mongo:27017/taskly
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET:-taskly-super-secret-key-change-in-production}
+      - NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL:-http://localhost:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3001}
+      - PORT=3000
+    volumes:
+      - api_media:/app/apps/api/media
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - taskly-network
+
+  # ============================================
+  # Web (Nuxt 3 Frontend)
+  # ============================================
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NUXT_PUBLIC_API_BASE: http://localhost:3000
+    container_name: taskly-web
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3001
+      - NUXT_PUBLIC_API_BASE=${NUXT_PUBLIC_API_BASE:-http://localhost:3000}
+    depends_on:
+      - api
+    networks:
+      - taskly-network
+
+volumes:
+  mongo_data:
+    driver: local
+  api_media:
+    driver: local
+
+networks:
+  taskly-network:
+    driver: bridge

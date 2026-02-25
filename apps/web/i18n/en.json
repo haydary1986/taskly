@@ -1,0 +1,86 @@
+{
+  "app": {
+    "name": "Taskly",
+    "company": "ALGO-NEST"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "tasks": "Task Management",
+    "myTasks": "My Tasks",
+    "kanban": "Kanban",
+    "projects": "Projects",
+    "timeTracking": "Time Tracking",
+    "checkIn": "Check In",
+    "visits": "Visit Log",
+    "myVisits": "My Visits",
+    "routeReport": "Route Report",
+    "clients": "Clients",
+    "codeReview": "Code Review",
+    "designs": "Design Requests",
+    "myDesigns": "My Designs",
+    "chat": "Chat",
+    "notifications": "Notifications",
+    "users": "Users",
+    "security": "Security Center",
+    "settings": "System Settings",
+    "profile": "Profile",
+    "kpi": "KPI",
+    "map": "Interactive Map",
+    "reports": "Reports",
+    "files": "File Management"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "loading": "Loading...",
+    "noData": "No data",
+    "confirm": "Confirm",
+    "back": "Back",
+    "logout": "Logout",
+    "submit": "Submit",
+    "close": "Close"
+  },
+  "status": {
+    "new": "New",
+    "inProgress": "In Progress",
+    "inReview": "In Review",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "priority": {
+    "urgent": "Urgent",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "roles": {
+    "superAdmin": "Super Admin",
+    "supervisor": "Supervisor",
+    "auditor": "Auditor",
+    "salesRep": "Sales Representative",
+    "programmer": "Programmer",
+    "designer": "Designer",
+    "socialMediaManager": "Social Media Manager"
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "activeEmployees": "Active Employees",
+    "activeTasks": "Active Tasks",
+    "activeProjects": "Active Projects",
+    "completedTasks": "Completed",
+    "visitsToday": "Visits Today",
+    "taskDistribution": "Task Distribution by Status",
+    "taskPriority": "Tasks by Priority",
+    "projectStatus": "Project Status",
+    "weeklyPerformance": "Weekly Performance",
+    "tasksByType": "Tasks by Type",
+    "topPerformers": "Top Performers This Month",
+    "recentTasks": "Recent Tasks",
+    "overdueTasks": "Overdue Tasks"
+  }
+}

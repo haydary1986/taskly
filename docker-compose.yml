@@ -4,10 +4,8 @@ services:
   # ============================================
   mongo:
     image: mongo:7
-    container_name: taskly-mongo
+
     restart: unless-stopped
-    ports:
-      - "27017:27017"
     volumes:
       - mongo_data:/data/db
     networks:
@@ -28,10 +26,8 @@ services:
       dockerfile: apps/api/Dockerfile
       args:
         PAYLOAD_SECRET: ${PAYLOAD_SECRET:-build-time-secret}
-    container_name: taskly-api
+
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=mongodb://mongo:27017/taskly
@@ -56,10 +52,8 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         NUXT_PUBLIC_API_BASE: http://localhost:3000
-    container_name: taskly-web
+
     restart: unless-stopped
-    ports:
-      - "3001:3001"
     environment:
       - NODE_ENV=production
       - HOST=0.0.0.0

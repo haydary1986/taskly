@@ -3,13 +3,13 @@ import type { Payload } from 'payload'
 const DEMO_PASSWORD = 'demo1234'
 
 const demoUsers = [
-  { name: 'أحمد المدير', email: 'admin@algo-nest.com', role: 'super-admin', phone: '0501234567' },
-  { name: 'سارة المشرفة', email: 'supervisor@algo-nest.com', role: 'supervisor', phone: '0502345678' },
-  { name: 'خالد المراقب', email: 'auditor@algo-nest.com', role: 'auditor', phone: '0503456789' },
-  { name: 'محمد المندوب', email: 'sales@algo-nest.com', role: 'sales-rep', phone: '0504567890' },
-  { name: 'فاطمة المبرمجة', email: 'dev@algo-nest.com', role: 'programmer', phone: '0505678901' },
-  { name: 'نورة المصممة', email: 'designer@algo-nest.com', role: 'designer', phone: '0506789012' },
-  { name: 'ليلى السوشيال', email: 'social@algo-nest.com', role: 'social-media-manager', phone: '0507890123' },
+  { name: 'أحمد المدير', email: 'admin@algo-nest.com', role: 'super-admin' as const, phone: '0501234567' },
+  { name: 'سارة المشرفة', email: 'supervisor@algo-nest.com', role: 'supervisor' as const, phone: '0502345678' },
+  { name: 'خالد المراقب', email: 'auditor@algo-nest.com', role: 'auditor' as const, phone: '0503456789' },
+  { name: 'محمد المندوب', email: 'sales@algo-nest.com', role: 'sales-rep' as const, phone: '0504567890' },
+  { name: 'فاطمة المبرمجة', email: 'dev@algo-nest.com', role: 'programmer' as const, phone: '0505678901' },
+  { name: 'نورة المصممة', email: 'designer@algo-nest.com', role: 'designer' as const, phone: '0506789012' },
+  { name: 'ليلى السوشيال', email: 'social@algo-nest.com', role: 'social-media-manager' as const, phone: '0507890123' },
 ]
 
 export async function seedDemoData(payload: Payload) {

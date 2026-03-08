@@ -20,6 +20,27 @@ const savingPassword = ref(false)
 const message = ref('')
 const passwordMessage = ref('')
 
+// Personal stats
+const myStats = ref<any>(null)
+const statsLoading = ref(true)
+
+onMounted(async () => {
+  try {
+    const [allTasks, completedTasks, overdueTasks] = await Promise.all([
+      api.get('/tasks', { query: { where: { assignee: { equals: authStore.user?.id } }, limit: 0 } }),
+      api.get('/tasks', { query: { where: { assignee: { equals: authStore.user?.id }, status: { equals: 'completed' } }, limit: 0 } }),
+      api.get('/tasks', { query: { where: { assignee: { equals: authStore.user?.id }, status: { not_in: ['completed', 'cancelled'] }, dueDate: { less_than: new Date().toISOString() } }, limit: 0 } }),
+    ])
+    myStats.value = {
+      total: allTasks.totalDocs || 0,
+      completed: completedTasks.totalDocs || 0,
+      overdue: overdueTasks.totalDocs || 0,
+      rate: allTasks.totalDocs ? Math.round((completedTasks.totalDocs / allTasks.totalDocs) * 100) : 0,
+    }
+  } catch { /* ignore */ }
+  finally { statsLoading.value = false }
+})
+
 // Telegram linking
 const telegramLinked = ref(!!authStore.user?.telegramChatId)
 const telegramLoading = ref(false)
@@ -147,7 +168,30 @@ async function updatePassword() {
 
 <template>
   <div class="mx-auto max-w-2xl space-y-6">
-    <h1 class="text-2xl font-bold text-gray-900">الملف الشخصي</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">الملف الشخصي</h1>
+
+    <!-- Personal Stats -->
+    <div v-if="myStats" class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div class="card text-center !py-4">
+        <p class="text-3xl font-bold text-primary-600">{{ myStats.total }}</p>
+        <p class="text-xs text-gray-500 mt-1">إجمالي المهام</p>
+      </div>
+      <div class="card text-center !py-4">
+        <p class="text-3xl font-bold text-green-600">{{ myStats.completed }}</p>
+        <p class="text-xs text-gray-500 mt-1">مكتملة</p>
+      </div>
+      <div class="card text-center !py-4">
+        <p class="text-3xl font-bold" :class="myStats.overdue > 0 ? 'text-red-500' : 'text-gray-400'">{{ myStats.overdue }}</p>
+        <p class="text-xs text-gray-500 mt-1">متأخرة</p>
+      </div>
+      <div class="card text-center !py-4">
+        <p class="text-3xl font-bold" :class="myStats.rate >= 80 ? 'text-green-600' : myStats.rate >= 50 ? 'text-amber-500' : 'text-red-500'">{{ myStats.rate }}%</p>
+        <p class="text-xs text-gray-500 mt-1">معدل الإنجاز</p>
+      </div>
+    </div>
+    <div v-else-if="statsLoading" class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div v-for="i in 4" :key="i" class="card !py-4 animate-pulse"><div class="h-8 w-12 mx-auto rounded bg-gray-200 dark:bg-gray-700" /><div class="h-3 w-16 mx-auto mt-2 rounded bg-gray-200 dark:bg-gray-700" /></div>
+    </div>
 
     <!-- Profile info -->
     <div class="card">

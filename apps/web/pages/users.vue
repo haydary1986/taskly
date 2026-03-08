@@ -4,6 +4,8 @@ definePageMeta({ middleware: 'auth', title: 'إدارة المستخدمين' })
 
 const authStore = useAuthStore()
 const api = useApi()
+const toast = useToast()
+const { exportToCSV } = useExportCSV()
 
 const users = ref<any[]>([])
 const loading = ref(true)
@@ -125,7 +127,7 @@ async function handleSubmit() {
     fetchUsers()
     setTimeout(() => { successMsg.value = '' }, 3000)
   } catch (err: any) {
-    alert(err?.data?.errors?.[0]?.message || 'حدث خطأ')
+    toast.error(err?.data?.errors?.[0]?.message || 'حدث خطأ')
   } finally { saving.value = false }
 }
 
@@ -134,8 +136,19 @@ async function toggleActive(user: any) {
     await api.patch(`/users/${user.id}`, { isActive: !user.isActive })
     user.isActive = !user.isActive
   } catch (err: any) {
-    alert(err?.data?.errors?.[0]?.message || 'حدث خطأ')
+    toast.error(err?.data?.errors?.[0]?.message || 'حدث خطأ')
   }
+}
+
+function exportUsers() {
+  exportToCSV(users.value, 'users', [
+    { key: 'name', label: 'الاسم' },
+    { key: 'email', label: 'البريد' },
+    { key: 'phone', label: 'الهاتف' },
+    { key: 'role', label: 'الدور' },
+    { key: 'isActive', label: 'الحالة' },
+  ])
+  toast.success('تم تصدير المستخدمين بنجاح')
 }
 </script>
 
@@ -146,10 +159,16 @@ async function toggleActive(user: any) {
         <h1 class="text-2xl font-bold text-gray-900">إدارة المستخدمين</h1>
         <p class="text-sm text-gray-500 mt-1">{{ users.length }} مستخدم مسجل</p>
       </div>
-      <button v-if="authStore.isAdmin" @click="openCreate" class="btn-primary">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        مستخدم جديد
-      </button>
+      <div class="flex items-center gap-2">
+        <button v-if="authStore.isAdmin" @click="exportUsers" class="btn-secondary flex items-center gap-1">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          تصدير CSV
+        </button>
+        <button v-if="authStore.isAdmin" @click="openCreate" class="btn-primary">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+          مستخدم جديد
+        </button>
+      </div>
     </div>
 
     <!-- Success message -->

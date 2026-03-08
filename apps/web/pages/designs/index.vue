@@ -2,6 +2,7 @@
 definePageMeta({ middleware: 'auth', title: 'إدارة طلبات التصميم' })
 
 const api = useApi()
+const toast = useToast()
 const authStore = useAuthStore()
 
 const requests = ref<any[]>([])
@@ -51,7 +52,7 @@ async function handleCreate() {
     Object.assign(form, { title: '', description: '', platform: [], designer: '', dueDate: '' })
     const res = await api.get('/design-requests', { query: { sort: '-createdAt', limit: 100, depth: 1 } })
     requests.value = res.docs
-  } catch (err: any) { alert(err?.data?.errors?.[0]?.message || 'خطأ') }
+  } catch (err: any) { toast.error(err?.data?.errors?.[0]?.message || 'خطأ') }
 }
 
 async function updateStatus(id: string, status: string) {

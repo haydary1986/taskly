@@ -2,6 +2,7 @@
 definePageMeta({ middleware: 'auth', title: 'مركز الأمان' })
 
 const api = useApi()
+const toast = useToast()
 
 const loginLogs = ref<any[]>([])
 const firewallRules = ref<any[]>([])
@@ -37,7 +38,7 @@ async function addRule() {
     firewallRules.value.unshift(res.doc)
     showAddRule.value = false
     Object.assign(ruleForm, { type: 'ip', value: '', action: 'block', description: '' })
-  } catch (err: any) { alert(err?.data?.errors?.[0]?.message || 'خطأ') }
+  } catch (err: any) { toast.error(err?.data?.errors?.[0]?.message || 'خطأ') }
 }
 
 async function deleteRule(id: string) {

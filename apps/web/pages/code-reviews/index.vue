@@ -2,6 +2,7 @@
 definePageMeta({ middleware: 'auth', title: 'مراجعة الكود' })
 
 const api = useApi()
+const toast = useToast()
 const authStore = useAuthStore()
 
 const reviews = ref<any[]>([])
@@ -42,7 +43,7 @@ async function handleCreate() {
     Object.assign(form, { title: '', description: '', githubRepo: '', githubBranch: '', githubPR: '', task: '' })
     const res = await api.get('/code-reviews', { query: { sort: '-createdAt', limit: 100, depth: 1 } })
     reviews.value = res.docs
-  } catch (err: any) { alert(err?.data?.errors?.[0]?.message || 'خطأ') }
+  } catch (err: any) { toast.error(err?.data?.errors?.[0]?.message || 'خطأ') }
 }
 
 async function updateStatus(id: string, status: string, reviewNotes?: string) {

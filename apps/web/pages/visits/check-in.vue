@@ -2,6 +2,7 @@
 definePageMeta({ middleware: 'auth', title: 'تسجيل زيارة' })
 
 const api = useApi()
+const toast = useToast()
 const authStore = useAuthStore()
 
 const clients = ref<any[]>([])
@@ -147,7 +148,7 @@ async function handleCheckIn() {
     if (visitNotes.value.trim() && res.visit?.id) {
       await api.patch(`/visits/${res.visit.id}`, { notes: visitNotes.value.trim() })
     }
-  } catch (err: any) { alert(err?.data?.error || 'حدث خطأ') }
+  } catch (err: any) { toast.error(err?.data?.error || 'حدث خطأ') }
   finally { checkingIn.value = false }
 }
 
@@ -204,7 +205,7 @@ async function handleCreateClient() {
     await fetchData()
     const newClient = clients.value.find((c) => c.id === res.doc?.id || c.id === res.id)
     if (newClient) selectClient(newClient)
-  } catch (err: any) { alert(err?.data?.errors?.[0]?.message || 'خطأ في حفظ العميل') }
+  } catch (err: any) { toast.error(err?.data?.errors?.[0]?.message || 'خطأ في حفظ العميل') }
   finally { savingClient.value = false }
 }
 </script>

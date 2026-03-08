@@ -28,5 +28,11 @@
 
     <!-- Global Command Palette -->
     <CommandPalette />
+
+    <!-- Toast Notifications -->
+    <ToastContainer />
+
+    <!-- Onboarding Wizard (first-time users) -->
+    <OnboardingWizard />
   </div>
 </template>

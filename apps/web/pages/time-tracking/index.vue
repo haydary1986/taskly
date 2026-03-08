@@ -3,6 +3,7 @@ definePageMeta({ middleware: 'auth', title: 'تتبع الوقت' })
 
 const api = useApi()
 const authStore = useAuthStore()
+const toast = useToast()
 
 const entries = ref<any[]>([])
 const tasks = ref<any[]>([])
@@ -52,7 +53,7 @@ function formatDuration(minutes: number) {
 }
 
 async function startTimer() {
-  if (!selectedTask.value) { alert('اختر مهمة أولاً'); return }
+  if (!selectedTask.value) { toast.warning('اختر مهمة أولاً'); return }
   try {
     const res = await api.post('/time-entries', {
       task: selectedTask.value,
@@ -63,7 +64,7 @@ async function startTimer() {
     entries.value.unshift(res.doc)
     elapsedSeconds.value = 0
     startInterval()
-  } catch (err: any) { alert(err?.data?.errors?.[0]?.message || 'خطأ') }
+  } catch (err: any) { toast.error(err?.data?.errors?.[0]?.message || 'خطأ') }
 }
 
 async function stopTimer() {
@@ -78,7 +79,7 @@ async function stopTimer() {
     activeTimer.value = null
     elapsedSeconds.value = 0
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null }
-  } catch (err: any) { alert(err?.data?.errors?.[0]?.message || 'خطأ') }
+  } catch (err: any) { toast.error(err?.data?.errors?.[0]?.message || 'خطأ') }
 }
 
 const totalToday = computed(() => {

@@ -2,6 +2,7 @@
 definePageMeta({ middleware: 'auth', title: 'إدارة العملاء' })
 
 const api = useApi()
+const toast = useToast()
 const authStore = useAuthStore()
 
 const clients = ref<any[]>([])
@@ -133,7 +134,7 @@ async function handleCreate() {
     })
     showCreateModal.value = false
     fetchClients()
-  } catch (err: any) { alert(err?.data?.errors?.[0]?.message || 'خطأ') }
+  } catch (err: any) { toast.error(err?.data?.errors?.[0]?.message || 'خطأ') }
   finally { savingClient.value = false }
 }
 
@@ -142,7 +143,7 @@ async function deleteClient(id: string) {
   try {
     await api.del(`/clients/${id}`)
     clients.value = clients.value.filter((c) => c.id !== id)
-  } catch (err: any) { alert(err?.data?.errors?.[0]?.message || 'خطأ') }
+  } catch (err: any) { toast.error(err?.data?.errors?.[0]?.message || 'خطأ') }
 }
 </script>
 

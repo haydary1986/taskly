@@ -2,6 +2,7 @@
 definePageMeta({ middleware: 'auth', title: 'المحادثات' })
 
 const api = useApi()
+const toast = useToast()
 const authStore = useAuthStore()
 const socket = useSocket()
 
@@ -390,7 +391,7 @@ async function createRoom() {
     roomForm.members = []
     userSearch.value = ''
     selectRoom(res.doc)
-  } catch (err: any) { alert(err?.data?.errors?.[0]?.message || 'خطأ') }
+  } catch (err: any) { toast.error(err?.data?.errors?.[0]?.message || 'خطأ') }
 }
 
 function openEditRoom() {
@@ -421,7 +422,7 @@ async function saveEditRoom() {
     }
     showEditRoom.value = false
   } catch (err: any) {
-    alert(err?.data?.errors?.[0]?.message || 'حدث خطأ أثناء التعديل')
+    toast.error(err?.data?.errors?.[0]?.message || 'حدث خطأ أثناء التعديل')
   }
 }
 async function deleteRoom() {
@@ -433,7 +434,7 @@ async function deleteRoom() {
     activeRoom.value = null
     messages.value = []
   } catch (err: any) {
-    alert(err?.data?.errors?.[0]?.message || 'حدث خطأ أثناء الحذف')
+    toast.error(err?.data?.errors?.[0]?.message || 'حدث خطأ أثناء الحذف')
   }
 }
 
@@ -485,7 +486,7 @@ async function deleteMessage(msg: any) {
     messages.value = messages.value.filter((m) => m.id !== msg.id)
     socket.emit('chat:message-deleted', { room: activeRoom.value?.id, messageId: msg.id })
   } catch (err: any) {
-    alert(err?.data?.errors?.[0]?.message || 'حدث خطأ')
+    toast.error(err?.data?.errors?.[0]?.message || 'حدث خطأ')
   }
 }
 

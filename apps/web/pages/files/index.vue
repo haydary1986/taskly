@@ -2,6 +2,7 @@
 definePageMeta({ middleware: 'auth' })
 
 const api = useApi()
+const toast = useToast()
 const authStore = useAuthStore()
 
 const files = ref<any[]>([])
@@ -134,7 +135,7 @@ async function uploadFile() {
     uploadForm.value = { name: '', description: '', project: '', category: 'general', file: null }
   } catch (err) {
     console.error('Failed to upload:', err)
-    alert('فشل رفع الملف')
+    toast.error('فشل رفع الملف')
   } finally {
     uploading.value = false
   }

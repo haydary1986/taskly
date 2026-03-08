@@ -45,6 +45,7 @@ export const Users: CollectionConfig = {
       saveToJWT: true,
       label: 'الدور',
       access: {
+        read: managementFieldAccess,
         create: managementFieldAccess,
         update: managementFieldAccess,
       },
@@ -64,6 +65,7 @@ export const Users: CollectionConfig = {
       defaultValue: true,
       label: 'نشط',
       access: {
+        read: managementFieldAccess,
         create: managementFieldAccess,
         update: managementFieldAccess,
       },

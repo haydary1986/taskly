@@ -81,10 +81,10 @@ export interface Config {
     'time-entries': TimeEntry;
     'login-logs': LoginLog;
     'firewall-rules': FirewallRule;
-    'push-subscriptions': PushSubscription;
     'task-comments': TaskComment;
     'task-activities': TaskActivity;
     'project-files': ProjectFile;
+    'push-subscriptions': PushSubscription;
     'refresh-tokens': RefreshToken;
     'magic-tokens': MagicToken;
     'audit-logs': AuditLog;
@@ -120,10 +120,10 @@ export interface Config {
     'time-entries': TimeEntriesSelect<false> | TimeEntriesSelect<true>;
     'login-logs': LoginLogsSelect<false> | LoginLogsSelect<true>;
     'firewall-rules': FirewallRulesSelect<false> | FirewallRulesSelect<true>;
-    'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
     'task-comments': TaskCommentsSelect<false> | TaskCommentsSelect<true>;
     'task-activities': TaskActivitiesSelect<false> | TaskActivitiesSelect<true>;
     'project-files': ProjectFilesSelect<false> | ProjectFilesSelect<true>;
+    'push-subscriptions': PushSubscriptionsSelect<false> | PushSubscriptionsSelect<true>;
     'refresh-tokens': RefreshTokensSelect<false> | RefreshTokensSelect<true>;
     'magic-tokens': MagicTokensSelect<false> | MagicTokensSelect<true>;
     'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
@@ -527,26 +527,6 @@ export interface FirewallRule {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "push-subscriptions".
- */
-export interface PushSubscription {
-  id: string;
-  user: string | User;
-  endpoint: string;
-  subscription:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "task-comments".
  */
 export interface TaskComment {
@@ -601,6 +581,26 @@ export interface ProjectFile {
   category?: ('general' | 'document' | 'design' | 'contract' | 'report' | 'image') | null;
   tags?: string[] | null;
   sharedWith?: (string | User)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "push-subscriptions".
+ */
+export interface PushSubscription {
+  id: string;
+  user: string | User;
+  endpoint: string;
+  subscription:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -760,10 +760,6 @@ export interface PayloadLockedDocument {
         value: string | FirewallRule;
       } | null)
     | ({
-        relationTo: 'push-subscriptions';
-        value: string | PushSubscription;
-      } | null)
-    | ({
         relationTo: 'task-comments';
         value: string | TaskComment;
       } | null)
@@ -774,6 +770,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'project-files';
         value: string | ProjectFile;
+      } | null)
+    | ({
+        relationTo: 'push-subscriptions';
+        value: string | PushSubscription;
       } | null)
     | ({
         relationTo: 'refresh-tokens';
@@ -1119,17 +1119,6 @@ export interface FirewallRulesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "push-subscriptions_select".
- */
-export interface PushSubscriptionsSelect<T extends boolean = true> {
-  user?: T;
-  endpoint?: T;
-  subscription?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "task-comments_select".
  */
 export interface TaskCommentsSelect<T extends boolean = true> {
@@ -1166,6 +1155,17 @@ export interface ProjectFilesSelect<T extends boolean = true> {
   category?: T;
   tags?: T;
   sharedWith?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "push-subscriptions_select".
+ */
+export interface PushSubscriptionsSelect<T extends boolean = true> {
+  user?: T;
+  endpoint?: T;
+  subscription?: T;
   updatedAt?: T;
   createdAt?: T;
 }

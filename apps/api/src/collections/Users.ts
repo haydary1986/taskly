@@ -7,6 +7,11 @@ export const Users: CollectionConfig = {
     tokenExpiration: 7200,
     maxLoginAttempts: 5,
     lockTime: 600000,
+    cookies: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      domain: process.env.NODE_ENV === 'production' ? 'api-task.algonest.tech' : undefined,
+    },
   },
   admin: {
     useAsTitle: 'name',

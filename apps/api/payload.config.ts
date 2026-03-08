@@ -185,4 +185,6 @@ export default buildConfig({
     process.env.FRONTEND_URL || 'http://localhost:3001',
     process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
   ].filter(Boolean),
+
+  cookiePrefix: 'taskly',
 })

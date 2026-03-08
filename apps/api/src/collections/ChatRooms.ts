@@ -67,6 +67,28 @@ export const ChatRooms: CollectionConfig = {
         return data
       },
     ],
+    afterDelete: [
+      async ({ id, req }) => {
+        // Delete all messages belonging to this room
+        try {
+          const msgs = await req.payload.find({
+            collection: 'chat-messages',
+            where: { room: { equals: id } },
+            limit: 10000,
+            depth: 0,
+          })
+          for (const msg of msgs.docs) {
+            await req.payload.delete({
+              collection: 'chat-messages',
+              id: msg.id,
+              overrideAccess: true,
+            })
+          }
+        } catch (err) {
+          console.error('[ChatRooms] Failed to cleanup messages on room delete:', err)
+        }
+      },
+    ],
   },
   timestamps: true,
 }

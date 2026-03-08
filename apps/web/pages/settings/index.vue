@@ -2,11 +2,11 @@
 definePageMeta({ middleware: 'auth', title: 'إعدادات النظام' })
 
 const api = useApi()
+const toast = useToast()
 
 const settings = ref<any>({})
 const loading = ref(true)
 const saving = ref(false)
-const message = ref('')
 const telegramTestResult = ref('')
 const emailTestResult = ref('')
 const telegramLinkedUsers = ref<any[]>([])
@@ -15,7 +15,7 @@ onMounted(async () => {
   try {
     const [settingsRes, usersRes] = await Promise.all([
       api.get('/globals/system-settings'),
-      api.get('/telegram-users'),
+      api.get('/v1/system/telegram-users'),
     ])
     settings.value = settingsRes
     telegramLinkedUsers.value = usersRes.users || []
@@ -24,28 +24,43 @@ onMounted(async () => {
 })
 
 async function saveSettings() {
-  saving.value = true; message.value = ''
+  saving.value = true
   try {
-    await api.post('/globals/system-settings', settings.value)
-    message.value = 'تم حفظ الإعدادات بنجاح'
-  } catch (err: any) { message.value = 'خطأ: ' + (err?.data?.errors?.[0]?.message || 'حدث خطأ') }
+    // Only send actual fields, strip out internal Payload fields
+    const { id, globalType, createdAt, updatedAt, ...data } = settings.value
+    await api.post('/globals/system-settings', data)
+    toast.success('تم حفظ الإعدادات بنجاح')
+  } catch (err: any) {
+    toast.error('خطأ: ' + (err?.data?.errors?.[0]?.message || 'حدث خطأ'))
+  }
   finally { saving.value = false }
 }
 
 async function testTelegram() {
   telegramTestResult.value = 'جاري الإرسال...'
   try {
-    const res = await api.post('/test-telegram', { message: 'رسالة تجريبية من Taskly! ✅' })
-    telegramTestResult.value = res.message
-  } catch (err: any) { telegramTestResult.value = err?.data?.error || 'فشل' }
+    // Save first to ensure latest token is applied
+    const { id, globalType, createdAt, updatedAt, ...data } = settings.value
+    await api.post('/globals/system-settings', data)
+    const res = await api.post('/v1/system/test-telegram', { message: 'رسالة تجريبية من Taskly! ✅' })
+    telegramTestResult.value = res.message || 'تم الإرسال بنجاح'
+    toast.success('تم إرسال الرسالة التجريبية')
+  } catch (err: any) {
+    telegramTestResult.value = err?.data?.error || 'فشل الإرسال'
+    toast.error('فشل إرسال الرسالة التجريبية: ' + (err?.data?.error || ''))
+  }
 }
 
 async function testEmail() {
   emailTestResult.value = 'جاري الإرسال...'
   try {
-    const res = await api.post('/test-email', {})
-    emailTestResult.value = res.message
-  } catch (err: any) { emailTestResult.value = err?.data?.error || 'فشل' }
+    const res = await api.post('/v1/system/test-email', {})
+    emailTestResult.value = res.message || 'تم الإرسال'
+    toast.success('تم إرسال البريد التجريبي')
+  } catch (err: any) {
+    emailTestResult.value = err?.data?.error || 'فشل'
+    toast.error('فشل إرسال البريد: ' + (err?.data?.error || ''))
+  }
 }
 </script>
 
@@ -114,7 +129,6 @@ async function testEmail() {
       <!-- Save -->
       <div class="flex items-center gap-3">
         <button @click="saveSettings" :disabled="saving" class="btn-primary">{{ saving ? 'جاري الحفظ...' : 'حفظ الإعدادات' }}</button>
-        <span v-if="message" class="text-sm" :class="message.includes('خطأ') ? 'text-red-600' : 'text-green-600'">{{ message }}</span>
       </div>
     </div>
   </div>

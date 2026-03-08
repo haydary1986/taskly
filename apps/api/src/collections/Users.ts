@@ -124,5 +124,55 @@ export const Users: CollectionConfig = {
       admin: { description: 'تجاوز صلاحيات الدور الافتراضي باستخدام JSON' },
     },
   ],
+  hooks: {
+    afterLogin: [
+      async ({ req, user }) => {
+        try {
+          const ip = req.headers.get?.('x-forwarded-for') || req.headers.get?.('x-real-ip') || 'unknown'
+          const userAgent = req.headers.get?.('user-agent') || ''
+          await req.payload.create({
+            collection: 'login-logs',
+            data: {
+              user: user.id,
+              email: user.email,
+              success: true,
+              ip: typeof ip === 'string' ? ip.split(',')[0].trim() : 'unknown',
+              userAgent,
+            } as any,
+            overrideAccess: true,
+          })
+        } catch (err) {
+          console.error('[LoginLog] Failed to log successful login:', err)
+        }
+      },
+    ],
+    afterError: [
+      async ({ req }) => {
+        try {
+          let email = 'unknown'
+          try {
+            const cloned = (req as any).clone()
+            const body = await cloned.json()
+            email = body?.email || 'unknown'
+          } catch { /* body parse failed */ }
+          const ip = req.headers.get?.('x-forwarded-for') || req.headers.get?.('x-real-ip') || 'unknown'
+          const userAgent = req.headers.get?.('user-agent') || ''
+          await req.payload.create({
+            collection: 'login-logs',
+            data: {
+              email,
+              success: false,
+              ip: typeof ip === 'string' ? ip.split(',')[0].trim() : 'unknown',
+              userAgent,
+              reason: 'بيانات دخول غير صحيحة',
+            } as any,
+            overrideAccess: true,
+          })
+        } catch {
+          // Silently fail — don't break login flow
+        }
+      },
+    ],
+  },
   timestamps: true,
 }

@@ -150,6 +150,17 @@ function exportUsers() {
   ])
   toast.success('تم تصدير المستخدمين بنجاح')
 }
+
+async function deleteUser(user: any) {
+  if (!confirm(`هل أنت متأكد من حذف المستخدم "${user.name}"؟ هذا الإجراء لا يمكن التراجع عنه.`)) return
+  try {
+    await api.del(`/users/${user.id}`)
+    users.value = users.value.filter(u => u.id !== user.id)
+    toast.success(`تم حذف ${user.name} بنجاح`)
+  } catch (err: any) {
+    toast.error(err?.data?.errors?.[0]?.message || 'فشل حذف المستخدم')
+  }
+}
 </script>
 
 <template>
@@ -249,6 +260,14 @@ function exportUsers() {
                   >
                     <svg v-if="user.isActive" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
                     <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </button>
+                  <button
+                    v-if="authStore.role === 'super-admin' && user.id !== authStore.user?.id"
+                    @click="deleteUser(user)"
+                    class="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                    title="حذف المستخدم"
+                  >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                   </button>
                 </div>
               </td>

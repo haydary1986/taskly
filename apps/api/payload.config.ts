@@ -57,6 +57,13 @@ import { inbox } from './src/endpoints/inbox'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+let dbUrl = process.env.DATABASE_URL || 'mongodb://127.0.0.1:27017/taskly'
+// Fix for Coolify internal MongoDB TLS cert missing
+if (dbUrl.includes('/etc/mongo/certs/ca.pem')) {
+  dbUrl = dbUrl.replace(/(\?|&)tls=true/g, '').replace(/(\?|&)tlsCAFile=\/etc\/mongo\/certs\/ca\.pem/g, '')
+  if (dbUrl.endsWith('?')) dbUrl = dbUrl.slice(0, -1)
+}
+
 export default buildConfig({
   admin: {
     user: 'users',

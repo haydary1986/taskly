@@ -14,14 +14,25 @@ export const seedAdmin = async () => {
             limit: 1,
         })
 
+        const email = process.env.ADMIN_EMAIL || 'haydary1986@gmail.com'
+        const password = process.env.ADMIN_PASSWORD || 'Sakina1990'
+        const name = process.env.ADMIN_NAME || 'مدير النظام'
+
         if (existingAdmins.totalDocs > 0) {
-            console.log('✅ A super-admin already exists. Skipping seed.')
+            console.log(`⚠️ A super-admin already exists. Forcing credential update to ${email}...`)
+            await payload.update({
+                collection: 'users',
+                id: existingAdmins.docs[0].id,
+                data: {
+                    email,
+                    password,
+                    name,
+                    isActive: true,
+                },
+            })
+            console.log('✅ Successfully updated existing super-admin credentials.')
             process.exit(0)
         }
-
-        const email = process.env.ADMIN_EMAIL || 'admin@taskly.local'
-        const password = process.env.ADMIN_PASSWORD || 'Taskly123!'
-        const name = process.env.ADMIN_NAME || 'مدير النظام'
 
         console.log(`Creating initial super-admin: ${email}...`)
 
@@ -37,9 +48,6 @@ export const seedAdmin = async () => {
         })
 
         console.log('✅ Successfully created initial super-admin user.')
-        if (!process.env.ADMIN_PASSWORD) {
-            console.log(`⚠️  Warning: Used default password "${password}". Please change this immediately upon login!`)
-        }
 
         process.exit(0)
     } catch (error) {

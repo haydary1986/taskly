@@ -4,8 +4,11 @@ export function useApi() {
   const config = useRuntimeConfig()
   const authStore = useAuthStore()
 
+  // Ensure absolute URL even if Nuxt hydration drops the config
+  const apiBase = config.public.apiBase ? config.public.apiBase : 'https://api-task.algonest.tech'
+
   const api = ofetch.create({
-    baseURL: `${config.public.apiBase}/api`,
+    baseURL: `${apiBase}/api`,
     credentials: 'include' as RequestCredentials,
     headers: {
       'Content-Type': 'application/json',
@@ -31,7 +34,7 @@ export function useApi() {
     if (alt) formData.append('alt', alt)
 
     const token = authStore.token
-    const res = await fetch(`${config.public.apiBase}/api/media`, {
+    const res = await fetch(`${apiBase}/api/media`, {
       method: 'POST',
       headers: token ? { Authorization: `JWT ${token}` } : {},
       body: formData,

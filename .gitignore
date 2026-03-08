@@ -9,3 +9,12 @@ dist/
 .DS_Store
 media/
 .turbo/
+
+# Database files
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.bak
+*.mongo

@@ -155,6 +155,19 @@ function formatDate(d: string) {
   if (!d) return ''
   return new Date(d).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })
 }
+
+function getFileUrl(file: any): string {
+  const url = file?.file?.url || ''
+  if (!url) return ''
+  // If URL is already absolute, use as-is
+  if (url.startsWith('http')) return url
+  return `${getApiBase()}${url}`
+}
+
+function isPreviewable(mimeType: string): boolean {
+  if (!mimeType) return false
+  return mimeType.startsWith('image/') || mimeType === 'application/pdf' || mimeType.startsWith('video/')
+}
 </script>
 
 <template>
@@ -162,7 +175,7 @@ function formatDate(d: string) {
     <!-- Header -->
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">إدارة الملفات</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">إدارة الملفات</h1>
         <p class="text-sm text-gray-500">{{ files.length }} ملف - {{ formatSize(storageUsed) }} مستخدم</p>
       </div>
       <button @click="showUpload = true" class="btn-primary">
@@ -201,8 +214,15 @@ function formatDate(d: string) {
         class="card p-4 transition-shadow hover:shadow-md"
       >
         <div class="flex items-start gap-3">
-          <!-- File icon -->
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+          <!-- File icon / Image thumbnail -->
+          <div
+            v-if="file.file?.mimeType?.startsWith('image/') && file.file?.url"
+            class="flex h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-100 cursor-pointer"
+            @click="previewFile = file"
+          >
+            <img :src="getFileUrl(file)" class="h-full w-full object-cover" loading="lazy" />
+          </div>
+          <div v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
             :class="{
               'bg-blue-100 text-blue-600': getFileIcon(file.file?.mimeType) === 'file',
               'bg-green-100 text-green-600': getFileIcon(file.file?.mimeType) === 'image',
@@ -219,7 +239,7 @@ function formatDate(d: string) {
           </div>
 
           <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-medium text-gray-900 truncate">{{ file.name }}</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ file.name }}</h3>
             <p v-if="file.description" class="text-xs text-gray-500 truncate mt-0.5">{{ file.description }}</p>
             <div class="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
               <span class="badge bg-gray-100 text-gray-600">{{ categoryLabels[file.category] || file.category }}</span>
@@ -234,26 +254,34 @@ function formatDate(d: string) {
         </div>
 
         <!-- Actions -->
-        <div class="mt-3 flex items-center gap-2 border-t border-gray-100 pt-2">
-          <!-- Preview (images) -->
+        <div class="mt-3 flex items-center gap-2 border-t border-gray-100 dark:border-white/10 pt-2">
+          <!-- Preview (images, PDFs, videos) -->
           <button
-            v-if="file.file?.mimeType?.startsWith('image/')"
+            v-if="isPreviewable(file.file?.mimeType)"
             @click="previewFile = file"
-            class="text-xs text-gray-500 hover:text-primary-600"
+            class="text-xs text-gray-500 hover:text-primary-600 transition-colors"
           >معاينة</button>
 
           <!-- Download -->
           <a
-            :href="`${getApiBase()}${file.file?.url}`"
+            :href="getFileUrl(file)"
             target="_blank"
-            class="text-xs text-gray-500 hover:text-primary-600"
+            :download="file.name"
+            class="text-xs text-gray-500 hover:text-primary-600 transition-colors"
           >تحميل</a>
+
+          <!-- Open in new tab -->
+          <a
+            :href="getFileUrl(file)"
+            target="_blank"
+            class="text-xs text-gray-500 hover:text-primary-600 transition-colors"
+          >فتح</a>
 
           <!-- Delete -->
           <button
             v-if="file.uploadedBy?.id === authStore.user?.id || authStore.isManagement"
             @click="deleteFile(file.id)"
-            class="text-xs text-gray-500 hover:text-red-600 mr-auto"
+            class="text-xs text-gray-500 hover:text-red-600 mr-auto transition-colors"
           >حذف</button>
         </div>
       </div>
@@ -264,8 +292,8 @@ function formatDate(d: string) {
     <!-- Upload Modal -->
     <Teleport to="body">
       <div v-if="showUpload" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="showUpload = false">
-        <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-          <h2 class="text-lg font-bold text-gray-900 mb-4">رفع ملف جديد</h2>
+        <div class="w-full max-w-md rounded-xl bg-white dark:bg-[#151B2B] p-6 shadow-xl">
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">رفع ملف جديد</h2>
 
           <div class="space-y-3">
             <div>
@@ -305,17 +333,48 @@ function formatDate(d: string) {
       </div>
     </Teleport>
 
-    <!-- Image Preview -->
+    <!-- Universal File Preview -->
     <Teleport to="body">
       <div v-if="previewFile" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" @click.self="previewFile = null">
-        <div class="relative max-w-3xl">
-          <button @click="previewFile = null" class="absolute -top-10 left-0 text-white hover:text-gray-300">
-            <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-          <img :src="`${getApiBase()}${previewFile.file?.url}`" class="max-h-[80vh] rounded-lg" />
-          <p class="mt-2 text-center text-sm text-white">{{ previewFile.name }}</p>
+        <div class="relative w-full max-w-4xl max-h-[90vh] flex flex-col">
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm text-white truncate flex-1">{{ previewFile.name }}</p>
+            <div class="flex items-center gap-3 shrink-0 mr-4">
+              <a :href="getFileUrl(previewFile)" target="_blank" :download="previewFile.name"
+                class="text-xs text-white/70 hover:text-white bg-white/10 rounded-lg px-3 py-1.5 transition-colors">
+                تحميل
+              </a>
+              <button @click="previewFile = null" class="text-white hover:text-gray-300 transition-colors">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Image Preview -->
+          <div v-if="previewFile.file?.mimeType?.startsWith('image/')" class="flex-1 flex items-center justify-center overflow-auto">
+            <img :src="getFileUrl(previewFile)" class="max-h-[80vh] rounded-lg shadow-2xl object-contain" />
+          </div>
+
+          <!-- PDF Preview -->
+          <div v-else-if="previewFile.file?.mimeType === 'application/pdf'" class="flex-1 overflow-hidden rounded-lg">
+            <iframe :src="getFileUrl(previewFile)" class="w-full h-[80vh] rounded-lg" />
+          </div>
+
+          <!-- Video Preview -->
+          <div v-else-if="previewFile.file?.mimeType?.startsWith('video/')" class="flex-1 flex items-center justify-center">
+            <video :src="getFileUrl(previewFile)" controls class="max-h-[80vh] rounded-lg shadow-2xl" />
+          </div>
+
+          <!-- Unsupported file type -->
+          <div v-else class="flex-1 flex flex-col items-center justify-center text-white/70">
+            <svg class="h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <p class="text-lg">لا يمكن معاينة هذا النوع من الملفات</p>
+            <a :href="getFileUrl(previewFile)" target="_blank" :download="previewFile.name" class="btn-primary mt-4">تحميل الملف</a>
+          </div>
         </div>
       </div>
     </Teleport>
   </div>
 </template>
+

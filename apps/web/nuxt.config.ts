@@ -85,7 +85,7 @@ export default defineNuxtConfig({
           options: { cacheName: 'gstatic-fonts-cache', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }, cacheableResponse: { statuses: [0, 200] } },
         },
         {
-          urlPattern: /\/api\/(users\/me|dashboard-stats|projects|tasks)(\?.*)?$/i,
+          urlPattern: /\/api\/(dashboard-stats|projects|tasks)(\?.*)?$/i,
           handler: 'StaleWhileRevalidate',
           options: { cacheName: 'api-stale-cache', expiration: { maxEntries: 50, maxAgeSeconds: 60 * 30 }, cacheableResponse: { statuses: [0, 200] } },
         },
@@ -93,6 +93,10 @@ export default defineNuxtConfig({
           urlPattern: /\/api\/media\/.*/i,
           handler: 'CacheFirst',
           options: { cacheName: 'media-cache', expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 }, cacheableResponse: { statuses: [0, 200] } },
+        },
+        {
+          urlPattern: /\/api\/users\/me/i,
+          handler: 'NetworkOnly',
         },
         {
           urlPattern: /\/api\/.*$/i,

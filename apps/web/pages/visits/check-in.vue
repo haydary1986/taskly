@@ -170,6 +170,8 @@ function openCreateClient() {
   if (location.value) {
     clientForm.location = [...location.value] as [number, number]
     clientGpsStatus.value = 'success'
+    // Auto-detect city from GPS
+    detectProvince(location.value[1], location.value[0])
   } else {
     captureClientGPS()
   }
@@ -179,13 +181,37 @@ function captureClientGPS() {
   if (!navigator.geolocation) { clientGpsStatus.value = 'error'; return }
   clientGpsStatus.value = 'loading'
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
+    async (pos) => {
       clientForm.location = [pos.coords.longitude, pos.coords.latitude]
       clientGpsStatus.value = 'success'
+      // Auto-detect city/province via reverse geocoding
+      await detectProvince(pos.coords.latitude, pos.coords.longitude)
     },
     () => { clientGpsStatus.value = 'error' },
     { enableHighAccuracy: true, timeout: 15000 },
   )
+}
+
+async function detectProvince(lat: number, lng: number) {
+  try {
+    const res = await $fetch<any>(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ar`, {
+      headers: { 'User-Agent': 'Taskly/1.0' },
+    })
+    const address = res?.address
+    if (address) {
+      // Try to get governorate (state) first, then city, then town
+      const province = address.state || address.city || address.town || address.county || ''
+      if (province && !clientForm.city) {
+        clientForm.city = province
+      }
+      // Auto-fill address if empty
+      if (!clientForm.address && (address.suburb || address.road || address.neighbourhood)) {
+        clientForm.address = [address.suburb, address.road, address.neighbourhood].filter(Boolean).join('، ')
+      }
+    }
+  } catch {
+    // Silently fail — user can still type manually
+  }
 }
 
 async function handleCreateClient() {
@@ -410,7 +436,16 @@ async function handleCreateClient() {
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div><label class="label">رقم الهاتف</label><input v-model="clientForm.phone" class="input" dir="ltr" placeholder="07XXXXXXXXX" /></div>
-              <div><label class="label">المدينة</label><input v-model="clientForm.city" class="input" placeholder="بغداد" /></div>
+              <div>
+                <label class="label">المحافظة / المدينة</label>
+                <div class="relative">
+                  <input v-model="clientForm.city" class="input" :class="clientForm.city ? 'pr-8' : ''" placeholder="يتم التعبئة تلقائياً..." />
+                  <span v-if="clientGpsStatus === 'success' && clientForm.city" class="absolute left-3 top-1/2 -translate-y-1/2 text-green-500">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  </span>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-0.5">يُكتشف تلقائياً من GPS — يمكنك تعديله</p>
+              </div>
             </div>
             <div>
               <label class="label">العنوان</label>

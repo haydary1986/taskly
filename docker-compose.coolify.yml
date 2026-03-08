@@ -23,6 +23,8 @@ services:
       - api_media:/app/apps/api/media
     expose:
       - "3000" # Coolify Traefik routing will use this
+    networks:
+      - coolify
 
   # ============================================
   # Web (Nuxt 3 Frontend)
@@ -42,6 +44,12 @@ services:
       - NUXT_PUBLIC_SENTRY_DSN=${NUXT_PUBLIC_SENTRY_DSN:-}
     expose:
       - "3001" # Coolify Traefik routing will use this
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
 
 volumes:
   api_media:

@@ -77,10 +77,16 @@ export default buildConfig({
 
   collections: [
     Users,
+    Media,
+    Projects,
     Tasks,
-    Visits,
-    Clients,
     Notifications,
+    Clients,
+    Visits,
+    ChatRooms,
+    ChatMessages,
+    DesignRequests,
+    CodeReviews,
     TimeEntries,
     LoginLogs,
     FirewallRules,

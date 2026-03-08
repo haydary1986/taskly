@@ -1,4 +1,7 @@
 import type { PayloadHandler } from 'payload'
+import { createLogger } from '../lib/logger'
+
+const log = createLogger('reports')
 
 export const exportReport: PayloadHandler = async (req) => {
   const { payload, user } = req
@@ -60,14 +63,64 @@ export const exportReport: PayloadHandler = async (req) => {
     headers = ['المستخدم', 'المهمة', 'وقت البدء', 'وقت الانتهاء', 'المدة (دقيقة)', 'الوصف']
   }
 
+  log.info({ type, format, count: data.length }, 'Report exported')
+
   if (format === 'csv') {
     const csvHeader = headers.join(',')
     const csvRows = data.map((row) => headers.map((h) => `"${String(row[h] || '').replace(/"/g, '""')}"`).join(','))
-    const csv = '\uFEFF' + [csvHeader, ...csvRows].join('\n') // BOM for Arabic
+    const csv = '\uFEFF' + [csvHeader, ...csvRows].join('\n')
     return new Response(csv, {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="${type}-report.csv"`,
+      },
+    })
+  }
+
+  if (format === 'pdf') {
+    // Generate HTML for client-side PDF rendering/printing
+    const typeLabels: Record<string, string> = { tasks: 'المهام', visits: 'الزيارات', performance: 'الأداء' }
+    const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8">
+  <title>تقرير ${typeLabels[type] || type} - Taskly</title>
+  <style>
+    body { font-family: 'IBM Plex Sans Arabic', 'Segoe UI', sans-serif; direction: rtl; padding: 20px; }
+    h1 { color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 8px; }
+    .meta { color: #666; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th { background: #2563eb; color: white; padding: 10px 8px; text-align: right; font-size: 13px; }
+    td { padding: 8px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
+    tr:nth-child(even) { background: #f9fafb; }
+    .footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e5e7eb; color: #999; font-size: 12px; }
+    @media print { body { padding: 0; } }
+  </style>
+</head>
+<body>
+  <h1>📊 تقرير ${typeLabels[type] || type}</h1>
+  <div class="meta">
+    <p>التاريخ: ${new Date().toLocaleDateString('ar-IQ')}</p>
+    ${startDate ? `<p>من: ${startDate}</p>` : ''}
+    ${endDate ? `<p>إلى: ${endDate}</p>` : ''}
+    <p>عدد السجلات: ${data.length}</p>
+  </div>
+  <table>
+    <thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>
+      ${data.map((row) => `<tr>${headers.map((h) => `<td>${row[h] || ''}</td>`).join('')}</tr>`).join('\n')}
+    </tbody>
+  </table>
+  <div class="footer">
+    <p>Taskly - ALGO-NEST | تم إنشاء التقرير تلقائياً</p>
+  </div>
+  <script>window.onload = () => window.print()</script>
+</body>
+</html>`
+    return new Response(html, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `inline; filename="${type}-report.html"`,
       },
     })
   }

@@ -67,6 +67,24 @@ export const Users: CollectionConfig = {
       },
     },
     {
+      name: 'twoFactorEnabled',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'المصادقة الثنائية مفعلة',
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'twoFactorSecret',
+      type: 'text',
+      label: 'مفتاح 2FA',
+      admin: {
+        hidden: true,
+      },
+    },
+    {
       name: 'telegramChatId',
       type: 'text',
       label: 'معرف تيليجرام',

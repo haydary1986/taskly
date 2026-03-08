@@ -1,4 +1,8 @@
 import type { PayloadHandler } from 'payload'
+import { validateBody, bulkAssignSchema } from '../lib/validators'
+import { createLogger } from '../lib/logger'
+
+const log = createLogger('bulk-assign')
 
 export const bulkAssignTasks: PayloadHandler = async (req) => {
   const { payload, user } = req
@@ -11,12 +15,11 @@ export const bulkAssignTasks: PayloadHandler = async (req) => {
     return Response.json({ error: 'ليس لديك صلاحية' }, { status: 403 })
   }
 
-  const body = await req.json?.() as { taskIds: string[]; assignee: string } | undefined
-  if (!body?.taskIds?.length || !body?.assignee) {
-    return Response.json({ error: 'يرجى تحديد المهام والموظف' }, { status: 400 })
-  }
+  const body = await req.json?.()
+  const validation = validateBody(bulkAssignSchema, body)
+  if (!validation.success) return validation.response
 
-  const { taskIds, assignee } = body
+  const { taskIds, assignee } = validation.data
 
   const results = await Promise.allSettled(
     taskIds.map((id) =>
@@ -31,6 +34,8 @@ export const bulkAssignTasks: PayloadHandler = async (req) => {
 
   const succeeded = results.filter((r) => r.status === 'fulfilled').length
   const failed = results.filter((r) => r.status === 'rejected').length
+
+  log.info({ userId: user.id, taskCount: taskIds.length, succeeded, failed }, 'Bulk assignment completed')
 
   return Response.json({
     message: `تم تعيين ${succeeded} مهمة بنجاح${failed > 0 ? `، فشل ${failed}` : ''}`,

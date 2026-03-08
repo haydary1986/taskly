@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # API (Next.js + Payload CMS + Socket.io)
+  # ============================================
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      args:
+        PAYLOAD_SECRET: ${PAYLOAD_SECRET}
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET}
+      - NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+    volumes:
+      - api_media:/app/apps/api/media
+    expose:
+      - "3000" # Coolify Traefik routing will use this
+
+  # ============================================
+  # Web (Nuxt 3 Frontend)
+  # ============================================
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NUXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_SERVER_URL}
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3001
+      - NUXT_PUBLIC_API_BASE=${NEXT_PUBLIC_SERVER_URL}
+      - NUXT_PUBLIC_SENTRY_DSN=${NUXT_PUBLIC_SENTRY_DSN:-}
+    expose:
+      - "3001" # Coolify Traefik routing will use this
+
+volumes:
+  api_media:
+    driver: local

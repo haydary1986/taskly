@@ -23,6 +23,12 @@ import { FirewallRules } from './src/collections/FirewallRules'
 import { TaskComments } from './src/collections/TaskComments'
 import { TaskActivities } from './src/collections/TaskActivities'
 import { ProjectFiles } from './src/collections/ProjectFiles'
+import { PushSubscriptions } from './src/collections/PushSubscriptions'
+// New collections
+import { RefreshTokens } from './src/collections/RefreshTokens'
+import { MagicTokens } from './src/collections/MagicTokens'
+import { AuditLogs } from './src/collections/AuditLogs'
+import { Webhooks } from './src/collections/Webhooks'
 
 // Globals
 import { SystemSettings } from './src/globals/SystemSettings'
@@ -30,7 +36,7 @@ import { SystemSettings } from './src/globals/SystemSettings'
 // Seed
 import { seedDemoData } from './src/seed'
 
-// Endpoints
+// Original endpoints
 import { dashboardStats } from './src/endpoints/dashboard-stats'
 import { bulkAssignTasks } from './src/endpoints/bulk-assign-tasks'
 import { checkIn, checkOut } from './src/endpoints/check-in'
@@ -42,7 +48,13 @@ import { telegramLink, telegramStatus, telegramUnlink, telegramWebhook } from '.
 import { pushSubscribe, pushUnsubscribe, pushVapidKey } from './src/endpoints/push'
 import { toggleReaction, togglePin, onlineUsers } from './src/endpoints/chat'
 import { dailyRoute } from './src/endpoints/daily-route'
-import { PushSubscriptions } from './src/collections/PushSubscriptions'
+
+// New endpoints
+import { refreshToken } from './src/endpoints/refresh-token'
+import { verifyMagicLogin } from './src/endpoints/verify-magic-login'
+import { setup2FA, verify2FA, disable2FA } from './src/endpoints/two-factor'
+import { taskCalendar } from './src/endpoints/task-calendar'
+import { inbox } from './src/endpoints/inbox'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -77,11 +89,47 @@ export default buildConfig({
     TaskComments,
     TaskActivities,
     ProjectFiles,
+    // New collections
+    RefreshTokens,
+    MagicTokens,
+    AuditLogs,
+    Webhooks,
   ],
 
   globals: [SystemSettings],
 
   endpoints: [
+    // ── v1 endpoints ────────────────────────────────────
+    { path: '/v1/dashboard-stats', method: 'get', handler: dashboardStats },
+    { path: '/v1/bulk-assign-tasks', method: 'post', handler: bulkAssignTasks },
+    { path: '/v1/check-in', method: 'post', handler: checkIn },
+    { path: '/v1/check-out', method: 'post', handler: checkOut },
+    { path: '/v1/kpi', method: 'get', handler: kpiStats },
+    { path: '/v1/reports/export', method: 'get', handler: exportReport },
+    { path: '/v1/magic-login', method: 'post', handler: magicLogin },
+    { path: '/v1/verify-magic-login', method: 'post', handler: verifyMagicLogin },
+    { path: '/v1/refresh-token', method: 'post', handler: refreshToken },
+    { path: '/v1/test-telegram', method: 'post', handler: testTelegram },
+    { path: '/v1/test-email', method: 'post', handler: testEmail },
+    { path: '/v1/telegram-users', method: 'get', handler: telegramUsers },
+    { path: '/v1/telegram-link', method: 'get', handler: telegramLink },
+    { path: '/v1/telegram-status', method: 'get', handler: telegramStatus },
+    { path: '/v1/telegram-webhook', method: 'post', handler: telegramWebhook },
+    { path: '/v1/telegram-unlink', method: 'post', handler: telegramUnlink },
+    { path: '/v1/push-subscribe', method: 'post', handler: pushSubscribe },
+    { path: '/v1/push-unsubscribe', method: 'post', handler: pushUnsubscribe },
+    { path: '/v1/push-vapid-key', method: 'get', handler: pushVapidKey },
+    { path: '/v1/chat-react', method: 'post', handler: toggleReaction },
+    { path: '/v1/chat-pin', method: 'post', handler: togglePin },
+    { path: '/v1/online-users', method: 'get', handler: onlineUsers },
+    { path: '/v1/daily-route', method: 'get', handler: dailyRoute },
+    { path: '/v1/2fa/setup', method: 'post', handler: setup2FA },
+    { path: '/v1/2fa/verify', method: 'post', handler: verify2FA },
+    { path: '/v1/2fa/disable', method: 'post', handler: disable2FA },
+    { path: '/v1/task-calendar', method: 'get', handler: taskCalendar },
+    { path: '/v1/inbox', method: 'get', handler: inbox },
+
+    // ── Legacy routes (backward compatibility) ──────────
     { path: '/dashboard-stats', method: 'get', handler: dashboardStats },
     { path: '/bulk-assign-tasks', method: 'post', handler: bulkAssignTasks },
     { path: '/check-in', method: 'post', handler: checkIn },
@@ -103,6 +151,8 @@ export default buildConfig({
     { path: '/chat-pin', method: 'post', handler: togglePin },
     { path: '/online-users', method: 'get', handler: onlineUsers },
     { path: '/daily-route', method: 'get', handler: dailyRoute },
+    { path: '/refresh-token', method: 'post', handler: refreshToken },
+    { path: '/verify-magic-login', method: 'post', handler: verifyMagicLogin },
   ],
 
   editor: lexicalEditor(),

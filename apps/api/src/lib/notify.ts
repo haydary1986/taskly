@@ -2,6 +2,9 @@ import type { Payload } from 'payload'
 import { notifyUserViaTelegram } from './telegram'
 import { sendPushNotification } from './push'
 import { socketService } from '../socket/index'
+import { createLogger } from './logger'
+
+const log = createLogger('notify')
 
 interface NotifyOptions {
   recipientId: string
@@ -38,7 +41,7 @@ export async function sendNotification(
       overrideAccess: true,
     })
   } catch (err) {
-    console.error('[Notify] Failed to create notification:', err)
+    log.error({ err, recipientId }, 'Failed to create notification')
   }
 
   // 2. Socket.io real-time
@@ -47,9 +50,10 @@ export async function sendNotification(
   // 3. Telegram (non-blocking)
   const telegramText = `<b>${title}</b>\n${message}`
   notifyUserViaTelegram(payload, recipientId, telegramText)
-    .then((sent) => console.log(`[Notify] Telegram to ${recipientId}: ${sent ? 'sent' : 'skipped'}`))
-    .catch((err) => console.error('[Notify] Telegram error:', err))
+    .then((sent) => log.debug({ recipientId, sent }, 'Telegram notification'))
+    .catch((err) => log.error({ err, recipientId }, 'Telegram notification failed'))
 
   // 4. Push notification (non-blocking)
-  sendPushNotification(payload, recipientId, { title, body: message, url: link }).catch(() => {})
+  sendPushNotification(payload, recipientId, { title, body: message, url: link })
+    .catch((err) => log.error({ err, recipientId }, 'Push notification failed'))
 }

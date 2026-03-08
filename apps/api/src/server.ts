@@ -1,6 +1,11 @@
+// Initialize Sentry as early as possible
+import './sentry.server.config'
 import { createServer } from 'http'
 import next from 'next'
 import { initSocket } from './socket/index.js'
+import { createLogger } from './lib/logger.js'
+
+const log = createLogger('server')
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = '0.0.0.0'
@@ -16,8 +21,11 @@ app.prepare().then(() => {
   initSocket(httpServer)
 
   httpServer.listen(port, () => {
-    console.log(`> Taskly API ready on http://localhost:${port}`)
-    console.log(`> Admin panel: http://localhost:${port}/admin`)
-    console.log(`> Socket.io: initialized`)
+    log.info({ port, hostname }, `Taskly API ready on http://localhost:${port}`)
+    log.info('Admin panel: http://localhost:%d/admin', port)
+    log.info('Socket.io: initialized')
+    if (process.env.SENTRY_DSN) {
+      log.info('Sentry: error tracking enabled')
+    }
   })
 })

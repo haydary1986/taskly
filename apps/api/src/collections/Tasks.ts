@@ -220,6 +220,13 @@ export const Tasks: CollectionConfig = {
       },
     },
     {
+      name: 'attachments',
+      type: 'relationship',
+      relationTo: 'media',
+      hasMany: true,
+      label: 'المرفقات',
+    },
+    {
       name: 'dependencies',
       type: 'relationship',
       relationTo: 'tasks',

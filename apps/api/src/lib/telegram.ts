@@ -1,4 +1,7 @@
 import type { Payload } from 'payload'
+import { createLogger } from './logger'
+
+const log = createLogger('telegram')
 
 /** Send a Telegram message to a user by their chat ID */
 export async function sendTelegramMessage(
@@ -9,7 +12,7 @@ export async function sendTelegramMessage(
   try {
     const settings = await payload.findGlobal({ slug: 'system-settings' })
     if (!settings.telegramEnabled || !settings.telegramBotToken) {
-      console.log('[Telegram] Skipped: enabled=', settings.telegramEnabled, 'token=', !!settings.telegramBotToken)
+      log.debug({ enabled: settings.telegramEnabled, hasToken: !!settings.telegramBotToken }, 'Telegram skipped')
       return false
     }
 
@@ -28,7 +31,7 @@ export async function sendTelegramMessage(
     const data = await res.json()
     return data.ok === true
   } catch (err) {
-    console.error('[Telegram] Send failed:', err)
+    log.error({ err, chatId }, 'Telegram send failed')
     return false
   }
 }
@@ -42,10 +45,10 @@ export async function notifyUserViaTelegram(
   try {
     const user = await payload.findByID({ collection: 'users', id: userId })
     if (!user?.telegramChatId) {
-      console.log(`[Telegram] User ${userId} has no telegramChatId`)
+      log.debug({ userId }, 'User has no telegramChatId')
       return false
     }
-    console.log(`[Telegram] Sending to user ${user.name} (chatId: ${user.telegramChatId})`)
+    log.debug({ userId, name: user.name }, 'Sending Telegram notification')
     return sendTelegramMessage(payload, user.telegramChatId as string, text)
   } catch {
     return false

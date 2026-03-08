@@ -1,4 +1,8 @@
 import type { PayloadHandler } from 'payload'
+import { validateBody, testTelegramSchema, testEmailSchema } from '../lib/validators'
+import { createLogger } from '../lib/logger'
+
+const log = createLogger('system')
 
 export const testTelegram: PayloadHandler = async (req) => {
   const { payload, user } = req
@@ -11,9 +15,12 @@ export const testTelegram: PayloadHandler = async (req) => {
     return Response.json({ error: 'تيليجرام غير مفعل أو لم يتم إدخال رمز البوت' }, { status: 400 })
   }
 
-  const body = await req.json?.() as { chatId?: string; message?: string } | undefined
-  const chatId = body?.chatId || (user as any).telegramChatId
-  const message = body?.message || 'رسالة تجريبية من Taskly!'
+  const body = await req.json?.()
+  const validation = validateBody(testTelegramSchema, body)
+  if (!validation.success) return validation.response
+
+  const chatId = validation.data.chatId || (user as any).telegramChatId
+  const message = validation.data.message || 'رسالة تجريبية من Taskly!'
 
   if (!chatId) {
     return Response.json({ error: 'يرجى تحديد معرف الدردشة' }, { status: 400 })
@@ -31,8 +38,10 @@ export const testTelegram: PayloadHandler = async (req) => {
       return Response.json({ error: `خطأ من تيليجرام: ${data.description}` }, { status: 400 })
     }
 
+    log.info({ chatId }, 'Test Telegram message sent')
     return Response.json({ message: 'تم إرسال الرسالة بنجاح' })
   } catch (err: any) {
+    log.error({ err }, 'Test Telegram failed')
     return Response.json({ error: `فشل الإرسال: ${err.message}` }, { status: 500 })
   }
 }
@@ -43,8 +52,11 @@ export const testEmail: PayloadHandler = async (req) => {
     return Response.json({ error: 'غير مصرح' }, { status: 403 })
   }
 
-  const body = await req.json?.() as { to?: string } | undefined
-  const to = body?.to || user.email
+  const body = await req.json?.()
+  const validation = validateBody(testEmailSchema, body)
+  if (!validation.success) return validation.response
+
+  const to = validation.data.to || user.email
 
   try {
     await payload.sendEmail({
@@ -52,8 +64,10 @@ export const testEmail: PayloadHandler = async (req) => {
       subject: 'رسالة تجريبية من Taskly',
       html: '<div dir="rtl"><h2>مرحباً!</h2><p>هذه رسالة تجريبية من نظام Taskly - ALGO-NEST</p></div>',
     })
+    log.info({ to }, 'Test email sent')
     return Response.json({ message: `تم إرسال البريد إلى ${to}` })
   } catch (err: any) {
+    log.error({ err }, 'Test email failed')
     return Response.json({ error: `فشل الإرسال: ${err.message}` }, { status: 500 })
   }
 }

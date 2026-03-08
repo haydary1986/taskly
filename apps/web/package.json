@@ -12,6 +12,7 @@
   "dependencies": {
     "@nuxtjs/i18n": "^10.2.3",
     "@pinia/nuxt": "^0.9",
+    "@sentry/nuxt": "^10.42.0",
     "@taskly/shared": "workspace:*",
     "chart.js": "^4.5.1",
     "leaflet": "^1.9.4",

@@ -1,4 +1,7 @@
 import type { Payload } from 'payload'
+import { createLogger } from './logger'
+
+const log = createLogger('push')
 
 let webpush: any = null
 
@@ -47,10 +50,11 @@ export async function sendPushNotification(
         // Remove expired subscriptions (410 Gone)
         if (err?.statusCode === 410 || err?.statusCode === 404) {
           await payload.delete({ collection: 'push-subscriptions', id: sub.id })
+          log.info({ userId, subId: sub.id }, 'Removed expired push subscription')
         }
       }
     }
   } catch (err) {
-    console.error('[Push] Send failed:', err)
+    log.error({ err, userId }, 'Push send failed')
   }
 }

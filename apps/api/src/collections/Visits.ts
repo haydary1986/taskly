@@ -88,6 +88,13 @@ export const Visits: CollectionConfig = {
       admin: { description: 'يتم التحقق تلقائياً من صحة الموقع' },
     },
     {
+      name: 'attachments',
+      type: 'relationship',
+      relationTo: 'media',
+      hasMany: true,
+      label: 'المرفقات',
+    },
+    {
       name: 'notes',
       type: 'textarea',
       label: 'ملاحظات',

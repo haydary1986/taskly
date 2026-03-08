@@ -1,4 +1,8 @@
 import type { PayloadHandler } from 'payload'
+import { haversineKm } from '../services/geo.service'
+import { createLogger } from '../lib/logger'
+
+const log = createLogger('daily-route')
 
 /** Get daily route for a specific representative on a specific date */
 export const dailyRoute: PayloadHandler = async (req) => {
@@ -70,20 +74,13 @@ export const dailyRoute: PayloadHandler = async (req) => {
       totalDuration += point.durationMinutes
     }
 
-    // Calculate travel distance from previous visit
+    // Calculate travel distance from previous visit using geo.service
     if (i > 0 && visit.checkInLocation) {
       const prev = visits.docs[i - 1] as any
       const prevLoc = prev.checkOutLocation || prev.checkInLocation
       if (prevLoc && Array.isArray(prevLoc) && Array.isArray(visit.checkInLocation)) {
-        const [lng1, lat1] = prevLoc as [number, number]
-        const [lng2, lat2] = visit.checkInLocation as [number, number]
-        const R = 6371
-        const dLat = ((lat2 - lat1) * Math.PI) / 180
-        const dLon = ((lng2 - lng1) * Math.PI) / 180
-        const a = Math.sin(dLat / 2) ** 2 +
-          Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2
-        const travelKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-        point.travelFromPreviousKm = Math.round(travelKm * 100) / 100
+        const travelKm = haversineKm(prevLoc as [number, number], visit.checkInLocation as [number, number])
+        point.travelFromPreviousKm = travelKm
         totalDistance += travelKm
       }
     }

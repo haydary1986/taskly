@@ -1,13 +1,19 @@
 import type { PayloadHandler } from 'payload'
+import { validateBody, chatReactSchema, chatPinSchema } from '../lib/validators'
+import { createLogger } from '../lib/logger'
+
+const log = createLogger('chat')
 
 /** Toggle a reaction on a chat message */
 export const toggleReaction: PayloadHandler = async (req) => {
   const { payload, user } = req
   if (!user) return Response.json({ error: 'غير مصرح' }, { status: 401 })
 
-  const body = (await req.json?.()) as any
-  const { messageId, emoji } = body || {}
-  if (!messageId || !emoji) return Response.json({ error: 'بيانات ناقصة' }, { status: 400 })
+  const body = await req.json?.()
+  const validation = validateBody(chatReactSchema, body)
+  if (!validation.success) return validation.response
+
+  const { messageId, emoji } = validation.data
 
   const message = await payload.findByID({ collection: 'chat-messages', id: messageId })
   const reactions = (message.reactions as Record<string, string[]>) || {}
@@ -36,9 +42,11 @@ export const togglePin: PayloadHandler = async (req) => {
   const { payload, user } = req
   if (!user) return Response.json({ error: 'غير مصرح' }, { status: 401 })
 
-  const body = (await req.json?.()) as any
-  const { messageId } = body || {}
-  if (!messageId) return Response.json({ error: 'بيانات ناقصة' }, { status: 400 })
+  const body = await req.json?.()
+  const validation = validateBody(chatPinSchema, body)
+  if (!validation.success) return validation.response
+
+  const { messageId } = validation.data
 
   const message = await payload.findByID({ collection: 'chat-messages', id: messageId })
   const updated = await payload.update({

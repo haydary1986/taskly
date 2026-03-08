@@ -44,7 +44,7 @@ async function handleSend() {
           v-model="email"
           type="email"
           class="input"
-          placeholder="admin@algo-nest.com"
+          placeholder="example@your-domain.com"
           required
           dir="ltr"
         />

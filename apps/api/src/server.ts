@@ -1,5 +1,5 @@
 // Initialize Sentry as early as possible
-import './sentry.server.config'
+import '../sentry.server.config.js'
 import { createServer } from 'http'
 import next from 'next'
 import { initSocket } from './socket/index.js'

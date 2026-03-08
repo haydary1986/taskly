@@ -33,8 +33,6 @@ import { Webhooks } from './src/collections/Webhooks'
 // Globals
 import { SystemSettings } from './src/globals/SystemSettings'
 
-// Seed
-import { seedDemoData } from './src/seed'
 
 // Original endpoints
 import { dashboardStats } from './src/endpoints/dashboard-stats'
@@ -169,9 +167,6 @@ export default buildConfig({
 
   sharp,
 
-  onInit: async (payload) => {
-    await seedDemoData(payload)
-  },
 
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
 

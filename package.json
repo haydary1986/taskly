@@ -19,5 +19,6 @@
       "@parcel/watcher",
       "vue-demi"
     ]
-  }
+  },
+  "packageManager": "pnpm@9.15.4"
 }

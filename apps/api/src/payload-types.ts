@@ -85,6 +85,10 @@ export interface Config {
     'task-comments': TaskComment;
     'task-activities': TaskActivity;
     'project-files': ProjectFile;
+    'refresh-tokens': RefreshToken;
+    'magic-tokens': MagicToken;
+    'audit-logs': AuditLog;
+    webhooks: Webhook;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -120,6 +124,10 @@ export interface Config {
     'task-comments': TaskCommentsSelect<false> | TaskCommentsSelect<true>;
     'task-activities': TaskActivitiesSelect<false> | TaskActivitiesSelect<true>;
     'project-files': ProjectFilesSelect<false> | ProjectFilesSelect<true>;
+    'refresh-tokens': RefreshTokensSelect<false> | RefreshTokensSelect<true>;
+    'magic-tokens': MagicTokensSelect<false> | MagicTokensSelect<true>;
+    'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
+    webhooks: WebhooksSelect<false> | WebhooksSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -171,6 +179,8 @@ export interface User {
   avatar?: (string | null) | Media;
   role: 'super-admin' | 'supervisor' | 'auditor' | 'sales-rep' | 'programmer' | 'designer' | 'social-media-manager';
   isActive?: boolean | null;
+  twoFactorEnabled?: boolean | null;
+  twoFactorSecret?: string | null;
   telegramChatId?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -282,6 +292,7 @@ export interface Task {
   recurrence?: ('none' | 'daily' | 'weekly' | 'monthly') | null;
   githubRepo?: string | null;
   githubBranch?: string | null;
+  attachments?: (string | Media)[] | null;
   /**
    * المهام التي يجب إنجازها قبل هذه المهمة
    */
@@ -369,6 +380,7 @@ export interface Visit {
    * يتم التحقق تلقائياً من صحة الموقع
    */
   isValid?: boolean | null;
+  attachments?: (string | Media)[] | null;
   notes?: string | null;
   syncedFromOffline?: boolean | null;
   updatedAt: string;
@@ -594,6 +606,81 @@ export interface ProjectFile {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "refresh-tokens".
+ */
+export interface RefreshToken {
+  id: string;
+  user: string | User;
+  token: string;
+  expiresAt: string;
+  /**
+   * User-Agent أو معرّف الجهاز
+   */
+  device?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "magic-tokens".
+ */
+export interface MagicToken {
+  id: string;
+  user: string | User;
+  token: string;
+  expiresAt: string;
+  used?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs".
+ */
+export interface AuditLog {
+  id: string;
+  user?: (string | null) | User;
+  action: 'create' | 'update' | 'delete' | 'login' | 'logout';
+  collectionName: string;
+  documentId?: string | null;
+  /**
+   * الحقول التي تم تغييرها
+   */
+  changes?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  ip?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "webhooks".
+ */
+export interface Webhook {
+  id: string;
+  name: string;
+  /**
+   * URL الذي سيتم إرسال الأحداث إليه
+   */
+  url: string;
+  events: ('task.created' | 'task.updated' | 'task.deleted' | 'visit.created' | 'client.created' | 'client.updated')[];
+  /**
+   * سيُستخدم لتوقيع Payload (HMAC-SHA256)
+   */
+  secret?: string | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -687,6 +774,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'project-files';
         value: string | ProjectFile;
+      } | null)
+    | ({
+        relationTo: 'refresh-tokens';
+        value: string | RefreshToken;
+      } | null)
+    | ({
+        relationTo: 'magic-tokens';
+        value: string | MagicToken;
+      } | null)
+    | ({
+        relationTo: 'audit-logs';
+        value: string | AuditLog;
+      } | null)
+    | ({
+        relationTo: 'webhooks';
+        value: string | Webhook;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -740,6 +843,8 @@ export interface UsersSelect<T extends boolean = true> {
   avatar?: T;
   role?: T;
   isActive?: T;
+  twoFactorEnabled?: T;
+  twoFactorSecret?: T;
   telegramChatId?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -834,6 +939,7 @@ export interface TasksSelect<T extends boolean = true> {
   recurrence?: T;
   githubRepo?: T;
   githubBranch?: T;
+  attachments?: T;
   dependencies?: T;
   completedAt?: T;
   updatedAt?: T;
@@ -888,6 +994,7 @@ export interface VisitsSelect<T extends boolean = true> {
   checkInPhoto?: T;
   distance?: T;
   isValid?: T;
+  attachments?: T;
   notes?: T;
   syncedFromOffline?: T;
   updatedAt?: T;
@@ -1059,6 +1166,57 @@ export interface ProjectFilesSelect<T extends boolean = true> {
   category?: T;
   tags?: T;
   sharedWith?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "refresh-tokens_select".
+ */
+export interface RefreshTokensSelect<T extends boolean = true> {
+  user?: T;
+  token?: T;
+  expiresAt?: T;
+  device?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "magic-tokens_select".
+ */
+export interface MagicTokensSelect<T extends boolean = true> {
+  user?: T;
+  token?: T;
+  expiresAt?: T;
+  used?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs_select".
+ */
+export interface AuditLogsSelect<T extends boolean = true> {
+  user?: T;
+  action?: T;
+  collectionName?: T;
+  documentId?: T;
+  changes?: T;
+  ip?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "webhooks_select".
+ */
+export interface WebhooksSelect<T extends boolean = true> {
+  name?: T;
+  url?: T;
+  events?: T;
+  secret?: T;
+  isActive?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -5,6 +5,11 @@ const router = useRouter()
 const { isDark, toggle: toggleDark } = useDarkMode()
 const { soundEnabled, toggle: toggleSound } = useSoundNotifications()
 
+const commandPaletteOpen = useState('commandPaletteOpen', () => false)
+function toggleCommandPalette() {
+  commandPaletteOpen.value = true
+}
+
 async function handleLogout() {
   const api = useApi()
   try {
@@ -29,6 +34,18 @@ async function handleLogout() {
     </div>
 
     <div class="flex items-center gap-1">
+      <!-- Search toggle (Command Palette) -->
+      <button
+        @click="toggleCommandPalette"
+        class="hidden sm:flex items-center gap-2 rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+        title="البحث الشامل (Ctrl+K)"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+        </svg>
+        <span class="text-xs bg-gray-100 dark:bg-white/10 px-1.5 py-0.5 rounded border border-gray-200 dark:border-white/10 hidden md:inline">Ctrl+K</span>
+      </button>
+
       <!-- Dark mode toggle -->
       <button
         @click="toggleDark"

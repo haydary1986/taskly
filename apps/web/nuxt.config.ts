@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     '@vite-pwa/nuxt',
     '@nuxtjs/i18n',
     '@sentry/nuxt/module',
+    '@formkit/auto-animate/nuxt',
   ],
 
   i18n: {

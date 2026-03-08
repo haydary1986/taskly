@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, adminOrOwn } from '../access/roles'
+import { socketService } from '../socket/index'
 
 export const Tasks: CollectionConfig = {
   slug: 'tasks',
@@ -103,8 +104,17 @@ export const Tasks: CollectionConfig = {
             })
           }
         }
+
+        // Broadcast real-time event to all connected clients
+        const eventName = operation === 'create' ? 'task:created' : 'task:updated'
+        socketService.emitToAll(eventName, doc)
       },
     ],
+    afterDelete: [
+      async ({ id }) => {
+        socketService.emitToAll('task:deleted', id)
+      }
+    ]
   },
   fields: [
     {

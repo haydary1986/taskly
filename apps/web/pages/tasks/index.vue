@@ -137,8 +137,16 @@ async function handleDelete(id: string) {
 <template>
   <div>
     <!-- Header -->
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-gray-900">إدارة المهام</h1>
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-4">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">إدارة المهام</h1>
+        <!-- View Toggle -->
+        <div class="flex rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+          <NuxtLink to="/tasks" class="rounded bg-white px-3 py-1 text-sm font-medium text-gray-900 shadow-sm dark:bg-primary-500/20 dark:text-primary-300 transition-all">القائمة</NuxtLink>
+          <NuxtLink to="/tasks/kanban" class="rounded px-3 py-1 text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm dark:text-gray-400 dark:hover:bg-gray-700 transition-all">كانبان</NuxtLink>
+          <NuxtLink to="/tasks/calendar" class="rounded px-3 py-1 text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm dark:text-gray-400 dark:hover:bg-gray-700 transition-all">التقويم</NuxtLink>
+        </div>
+      </div>
       <button @click="showCreateModal = true; resetForm()" class="btn-primary">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -176,7 +184,7 @@ async function handleDelete(id: string) {
       </div>
     </div>
 
-    <div v-else-if="tasksStore.tasks.length" class="space-y-3">
+    <div v-else-if="tasksStore.tasks.length" class="space-y-3" v-auto-animate>
       <div
         v-for="task in tasksStore.tasks"
         :key="task.id"

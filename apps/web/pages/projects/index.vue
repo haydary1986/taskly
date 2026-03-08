@@ -106,7 +106,7 @@ async function handleSubmit() {
     </div>
 
     <!-- Project grid -->
-    <div v-else-if="projectsStore.projects.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div v-else-if="projectsStore.projects.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" v-auto-animate>
       <NuxtLink
         v-for="project in projectsStore.projects"
         :key="project.id"

@@ -10,6 +10,7 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
+    "@formkit/auto-animate": "^0.9.0",
     "@nuxtjs/i18n": "^10.2.3",
     "@pinia/nuxt": "^0.9",
     "@sentry/nuxt": "^10.42.0",

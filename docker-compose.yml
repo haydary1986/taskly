@@ -30,6 +30,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - TZ=Asia/Baghdad
       - DATABASE_URL=mongodb://mongo:27017/taskly
       - PAYLOAD_SECRET=${PAYLOAD_SECRET:-taskly-super-secret-key-change-in-production}
       - NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL:-http://localhost:3000}
@@ -56,6 +57,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - TZ=Asia/Baghdad
       - HOST=0.0.0.0
       - PORT=3001
       - NUXT_PUBLIC_API_BASE=${NUXT_PUBLIC_API_BASE:-http://localhost:3000}

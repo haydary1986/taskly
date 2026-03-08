@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { watch } from 'vue'
 definePageMeta({ middleware: 'auth', title: 'إدارة المستخدمين' })
 
 const authStore = useAuthStore()
@@ -10,6 +11,16 @@ const showModal = ref(false)
 const editingUser = ref<any>(null)
 const saving = ref(false)
 const successMsg = ref('')
+const searchQuery = ref('')
+const sortBy = ref('-createdAt')
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+watch([searchQuery, sortBy], () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    fetchUsers()
+  }, 300)
+})
 
 const roleLabels: Record<string, string> = {
   'super-admin': 'مدير عام',
@@ -45,10 +56,22 @@ onMounted(fetchUsers)
 async function fetchUsers() {
   loading.value = true
   try {
-    const res = await api.get('/users', { query: { limit: 100, sort: '-createdAt' } })
+    const query: any = { limit: 100, sort: sortBy.value }
+    if (searchQuery.value) {
+      query.where = { name: { like: searchQuery.value } }
+    }
+    const res = await api.get('/users', { query })
     users.value = res.docs
   } catch (err) { console.error(err) }
   finally { loading.value = false }
+}
+
+function toggleSort(field: string) {
+  if (sortBy.value === field) {
+    sortBy.value = `-${field}`
+  } else {
+    sortBy.value = field
+  }
 }
 
 function openCreate() {
@@ -134,21 +157,29 @@ async function toggleActive(user: any) {
       <p class="text-sm font-medium text-green-700">{{ successMsg }}</p>
     </div>
 
+    <!-- Actions and Search -->
+    <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="relative w-full sm:max-w-xs">
+        <input v-model="searchQuery" type="text" class="input pl-10" placeholder="البحث عن مستخدم بالاسم..." />
+        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+      </div>
+    </div>
+
     <!-- Users table -->
     <div class="card overflow-hidden !p-0">
       <div class="overflow-x-auto">
         <table class="w-full text-right text-sm">
           <thead class="border-b border-gray-200 bg-gray-50">
             <tr>
-              <th class="px-4 py-3 font-medium text-gray-600">المستخدم</th>
-              <th class="px-4 py-3 font-medium text-gray-600">البريد</th>
+              <th @click="toggleSort('name')" class="px-4 py-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors dark:hover:bg-white/5">المستخدم <span v-if="sortBy.includes('name')" class="text-[10px]">{{ sortBy.startsWith('-') ? '▼' : '▲' }}</span></th>
+              <th @click="toggleSort('email')" class="px-4 py-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors dark:hover:bg-white/5">البريد <span v-if="sortBy.includes('email')" class="text-[10px]">{{ sortBy.startsWith('-') ? '▼' : '▲' }}</span></th>
               <th class="px-4 py-3 font-medium text-gray-600">الهاتف</th>
-              <th class="px-4 py-3 font-medium text-gray-600">الدور</th>
-              <th class="px-4 py-3 font-medium text-gray-600">الحالة</th>
+              <th @click="toggleSort('role')" class="px-4 py-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors dark:hover:bg-white/5">الدور <span v-if="sortBy.includes('role')" class="text-[10px]">{{ sortBy.startsWith('-') ? '▼' : '▲' }}</span></th>
+              <th @click="toggleSort('isActive')" class="px-4 py-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors dark:hover:bg-white/5">الحالة <span v-if="sortBy.includes('isActive')" class="text-[10px]">{{ sortBy.startsWith('-') ? '▼' : '▲' }}</span></th>
               <th class="px-4 py-3 font-medium text-gray-600">إجراءات</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
+          <tbody class="divide-y divide-gray-100 dark:divide-white/5" v-auto-animate>
             <tr v-if="loading">
               <td colspan="6" class="px-4 py-8 text-center text-gray-400">جاري التحميل...</td>
             </tr>

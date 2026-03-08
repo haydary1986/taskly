@@ -25,5 +25,8 @@
 
     <!-- PWA Install Prompt -->
     <PwaInstallPrompt />
+
+    <!-- Global Command Palette -->
+    <CommandPalette />
   </div>
 </template>

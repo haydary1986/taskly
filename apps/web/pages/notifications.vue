@@ -62,7 +62,7 @@ function timeAgo(dateStr: string) {
     </div>
 
     <!-- Notifications list -->
-    <div v-else-if="notificationsStore.notifications.length" class="space-y-2">
+    <div v-else-if="notificationsStore.notifications.length" class="space-y-2" v-auto-animate>
       <div
         v-for="notif in notificationsStore.notifications"
         :key="notif.id"

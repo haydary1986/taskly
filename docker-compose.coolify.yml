@@ -13,6 +13,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - TZ=Asia/Baghdad
       - PORT=3000
       - DATABASE_URL=${DATABASE_URL}
       - PAYLOAD_SECRET=${PAYLOAD_SECRET}
@@ -38,6 +39,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - TZ=Asia/Baghdad
       - HOST=0.0.0.0
       - PORT=3001
       - NUXT_PUBLIC_API_BASE=${NEXT_PUBLIC_SERVER_URL}

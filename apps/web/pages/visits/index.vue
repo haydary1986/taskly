@@ -64,7 +64,7 @@ watch([dateFilter, repFilter], fetchVisits)
       <div v-for="i in 5" :key="i" class="card animate-pulse"><div class="h-4 w-48 rounded bg-gray-200" /></div>
     </div>
 
-    <div v-else-if="visits.length" class="space-y-3">
+    <div v-else-if="visits.length" class="space-y-3" v-auto-animate>
       <div v-for="visit in visits" :key="visit.id" class="card">
         <div class="flex items-start justify-between">
           <div>

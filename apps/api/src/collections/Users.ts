@@ -98,12 +98,30 @@ export const Users: CollectionConfig = {
       type: 'text',
       label: 'معرف تيليجرام',
       admin: {
+        readOnly: true,
         position: 'sidebar',
         condition: (data, siblingData, { user }) => {
           const role = (user as any)?.role
           return role === 'super-admin' || role === 'supervisor'
         },
       },
+    },
+    {
+      name: 'preferences',
+      type: 'json',
+      label: 'تفضيلات الواجهة (سحابياً)',
+      admin: { description: 'JSON يضم إعدادات المظهر مثل الوضع الداكن، ترتيب القوائم، الخ' },
+    },
+    {
+      name: 'customPermissions',
+      type: 'json',
+      label: 'صلاحيات مخصصة',
+      access: {
+        read: ({ req: { user } }) => user?.role === 'super-admin',
+        create: ({ req: { user } }) => user?.role === 'super-admin',
+        update: ({ req: { user } }) => user?.role === 'super-admin'
+      },
+      admin: { description: 'تجاوز صلاحيات الدور الافتراضي باستخدام JSON' },
     },
   ],
   timestamps: true,

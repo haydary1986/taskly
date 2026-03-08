@@ -120,8 +120,16 @@ function isOverdue(task: any) {
 <template>
   <div class="space-y-4">
     <!-- Header -->
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-gray-900">لوحة كانبان</h1>
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-4">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">كانبان</h1>
+        <!-- View Toggle -->
+        <div class="flex rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+          <NuxtLink to="/tasks" class="rounded px-3 py-1 text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm dark:text-gray-400 dark:hover:bg-gray-700 transition-all">القائمة</NuxtLink>
+          <NuxtLink to="/tasks/kanban" class="rounded bg-white px-3 py-1 text-sm font-medium text-gray-900 shadow-sm dark:bg-primary-500/20 dark:text-primary-300 transition-all">كانبان</NuxtLink>
+          <NuxtLink to="/tasks/calendar" class="rounded px-3 py-1 text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm dark:text-gray-400 dark:hover:bg-gray-700 transition-all">التقويم</NuxtLink>
+        </div>
+      </div>
       <div class="flex gap-2">
         <select v-if="projects.length" v-model="filterProject" class="input w-40 text-xs">
           <option value="">كل المشاريع</option>

@@ -4,8 +4,12 @@ export function useApi() {
   const config = useRuntimeConfig()
   const authStore = useAuthStore()
 
+  // Nuxt's runtimeConfig sets apiBase to "" (empty string) if the Coolify Environment variable is unset/empty.
+  // We must explicitly ensure we don't fetch from an empty base URL resulting in 404s.
+  const resolvedApiBase = config.public.apiBase || 'https://api-task.algonest.tech'
+
   const api = ofetch.create({
-    baseURL: `${config.public.apiBase}/api`,
+    baseURL: `${resolvedApiBase}/api`,
     credentials: 'include' as RequestCredentials,
     headers: {
       'Content-Type': 'application/json',
@@ -31,7 +35,7 @@ export function useApi() {
     if (alt) formData.append('alt', alt)
 
     const token = authStore.token
-    const res = await fetch(`${config.public.apiBase}/api/media`, {
+    const res = await fetch(`${resolvedApiBase}/api/media`, {
       method: 'POST',
       headers: token ? { Authorization: `JWT ${token}` } : {},
       body: formData,

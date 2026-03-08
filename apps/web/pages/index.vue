@@ -8,6 +8,17 @@ definePageMeta({ middleware: 'auth' })
 
 const authStore = useAuthStore()
 const api = useApi()
+const { isDark } = useDarkMode()
+
+// Make charts responsive to dark mode
+watchEffect(() => {
+  if (import.meta.client && ChartJS.defaults) {
+    ChartJS.defaults.color = isDark.value ? '#9CA3AF' : '#6B7280'
+    if (ChartJS.defaults.scale && ChartJS.defaults.scale.grid) {
+      ChartJS.defaults.scale.grid.color = isDark.value ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
+    }
+  }
+})
 
 const stats = ref<any>(null)
 const loading = ref(true)

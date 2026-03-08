@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+  <div class="flex min-h-screen bg-gray-50 transition-colors duration-300">
     <!-- Network status -->
     <NetworkStatus />
 

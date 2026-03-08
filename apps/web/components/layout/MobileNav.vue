@@ -39,7 +39,7 @@ const items = computed(() => {
 </script>
 
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white lg:hidden">
+  <nav class="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white lg:hidden dark:bg-transparent dark:border-white/5">
     <div class="flex items-center justify-around">
       <NuxtLink
         v-for="item in items"
@@ -48,8 +48,8 @@ const items = computed(() => {
         class="relative flex flex-col items-center gap-0.5 px-2 py-2 text-[10px]"
         :class="
           route.path === item.to || (item.to !== '/' && route.path.startsWith(item.to))
-            ? 'text-primary-600'
-            : 'text-gray-500'
+            ? 'text-primary-600 dark:text-primary-400'
+            : 'text-gray-500 dark:text-gray-400'
         "
       >
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">

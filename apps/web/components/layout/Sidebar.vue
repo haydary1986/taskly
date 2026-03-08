@@ -129,9 +129,9 @@ const iconMap: Record<string, string> = {
 </script>
 
 <template>
-  <aside class="fixed right-0 top-0 z-30 hidden h-screen w-64 flex-col border-l border-gray-200 bg-white lg:flex">
+  <aside class="fixed right-0 top-0 z-30 hidden h-screen w-64 flex-col border-l border-gray-200 bg-white lg:flex dark:border-white/5 dark:bg-transparent">
     <!-- Logo -->
-    <div class="flex h-16 shrink-0 items-center border-b border-gray-200 px-6">
+    <div class="flex h-16 shrink-0 items-center border-b border-gray-200 px-6 dark:border-white/5">
       <h1 class="text-xl font-bold text-primary-600">Taskly</h1>
       <span class="mr-2 text-xs text-gray-400">ALGO-NEST</span>
     </div>
@@ -139,15 +139,15 @@ const iconMap: Record<string, string> = {
     <!-- Menu grouped by section -->
     <nav class="flex-1 overflow-y-auto px-3 pb-4 pt-2">
       <div v-for="group in groupedItems" :key="group.section" class="mb-2">
-        <p class="mb-1 mt-3 px-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{{ group.section }}</p>
+        <p class="mb-1 mt-3 px-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">{{ group.section }}</p>
         <NuxtLink
           v-for="item in group.items"
           :key="item.to"
           :to="item.to"
           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
           :class="route.path === item.to || (item.to !== '/' && route.path.startsWith(item.to))
-            ? 'bg-primary-50 text-primary-700'
-            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+            ? 'bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400'
+            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white'"
         >
           <svg class="h-[18px] w-[18px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" :d="iconMap[item.icon]" />
@@ -158,13 +158,13 @@ const iconMap: Record<string, string> = {
     </nav>
 
     <!-- User info -->
-    <div class="shrink-0 border-t border-gray-200 bg-white p-4">
+    <div class="shrink-0 border-t border-gray-200 bg-white p-4 dark:bg-transparent dark:border-white/5">
       <div class="flex items-center gap-3">
-        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700">
+        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700 dark:bg-primary-500/20 dark:text-primary-300">
           {{ authStore.user?.name?.charAt(0) || '?' }}
         </div>
         <div class="flex-1 truncate">
-          <p class="truncate text-sm font-medium text-gray-900">{{ authStore.user?.name }}</p>
+          <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{{ authStore.user?.name }}</p>
           <p class="truncate text-xs text-gray-500">{{ authStore.user?.email }}</p>
         </div>
       </div>

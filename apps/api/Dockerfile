@@ -72,6 +72,7 @@ COPY --from=builder /app/apps/api/.next ./apps/api/.next
 COPY --from=builder /app/apps/api/public ./apps/api/public
 COPY --from=builder /app/apps/api/next.config.mjs ./apps/api/next.config.mjs
 COPY --from=builder /app/apps/api/payload.config.ts ./apps/api/payload.config.ts
+COPY --from=builder /app/apps/api/sentry.*.config.ts ./apps/api/
 COPY --from=builder /app/apps/api/src ./apps/api/src
 COPY --from=builder /app/apps/api/tsconfig.json ./apps/api/tsconfig.json
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json

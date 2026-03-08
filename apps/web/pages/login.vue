@@ -32,7 +32,9 @@ async function handleLogin() {
       router.push('/')
     }
   } catch (err: any) {
-    error.value = err?.data?.errors?.[0]?.message || 'بيانات الدخول غير صحيحة'
+    console.error('Login Error:', err)
+    const errMessage = err?.data?.errors?.[0]?.message || err?.message || ''
+    error.value = errMessage ? `خطأ مفصل: ${errMessage}` : 'بيانات الدخول غير صحيحة'
   } finally {
     loading.value = false
   }

@@ -26,7 +26,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3000',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || (process.env.NODE_ENV === 'production' ? 'https://api-task.algonest.tech' : 'http://localhost:3000'),
       sentryDsn: process.env.NUXT_PUBLIC_SENTRY_DSN || '',
     },
   },

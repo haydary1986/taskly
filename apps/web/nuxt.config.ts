@@ -52,7 +52,7 @@ export default defineNuxtConfig({
   },
 
   pwa: {
-    registerType: 'autoUpdate',
+    registerType: 'prompt',
     manifest: {
       name: 'Taskly - ALGO-NEST',
       short_name: 'Taskly',

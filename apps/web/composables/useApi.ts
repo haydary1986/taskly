@@ -23,7 +23,15 @@ export function useApi() {
     onResponseError({ response }) {
       if (response.status === 401) {
         authStore.logout()
-        navigateTo('/login')
+        // Only navigate if we aren't already on the login page to avoid potential browser loops
+        if (process.client) {
+          if (window.location.pathname !== '/login') {
+            navigateTo('/login')
+          }
+        } else {
+          // On SSR, navigate doesn't cause browser loops
+          navigateTo('/login')
+        }
       }
     },
   })

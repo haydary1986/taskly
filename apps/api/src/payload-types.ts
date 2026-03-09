@@ -182,6 +182,30 @@ export interface User {
   twoFactorEnabled?: boolean | null;
   twoFactorSecret?: string | null;
   telegramChatId?: string | null;
+  /**
+   * JSON يضم إعدادات المظهر مثل الوضع الداكن، ترتيب القوائم، الخ
+   */
+  preferences?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * تجاوز صلاحيات الدور الافتراضي باستخدام JSON
+   */
+  customPermissions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -846,6 +870,8 @@ export interface UsersSelect<T extends boolean = true> {
   twoFactorEnabled?: T;
   twoFactorSecret?: T;
   telegramChatId?: T;
+  preferences?: T;
+  customPermissions?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

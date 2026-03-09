@@ -13,7 +13,7 @@ onMounted(async () => {
   if (sessionStorage.getItem('telegram_popup_dismissed')) return
 
   try {
-    const res = await api.get('/telegram-link')
+    const res = await api.post('/telegram/link', {})
     if (res.linked) return
     if (res.url) {
       telegramUrl.value = res.url
@@ -43,7 +43,7 @@ function startPolling() {
   checking.value = true
   pollInterval = setInterval(async () => {
     try {
-      const res = await api.get('/telegram-status')
+      const res = await api.get('/telegram/status')
       if (res.linked) {
         clearInterval(pollInterval!)
         pollInterval = null

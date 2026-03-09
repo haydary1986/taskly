@@ -51,7 +51,7 @@ let pollInterval: ReturnType<typeof setInterval> | null = null
 async function linkTelegram() {
   telegramLoading.value = true
   try {
-    const res = await api.get('/telegram-link')
+    const res = await api.post('/telegram/link', {})
     if (res.linked) {
       telegramLinked.value = true
       return
@@ -79,7 +79,7 @@ function startPolling() {
   telegramPolling.value = true
   pollInterval = setInterval(async () => {
     try {
-      const res = await api.get('/telegram-status')
+      const res = await api.get('/telegram/status')
       if (res.linked) {
         stopPolling()
         telegramLinked.value = true
@@ -102,7 +102,7 @@ function stopPolling() {
 async function unlinkTelegram() {
   if (!confirm('هل تريد إلغاء ربط حساب تيليجرام؟ لن تصلك إشعارات تيليجرام بعد ذلك.')) return
   try {
-    await api.post('/telegram-unlink', {})
+    await api.post('/telegram/unlink', {})
     telegramLinked.value = false
     if (authStore.user) authStore.user.telegramChatId = null
   } catch {

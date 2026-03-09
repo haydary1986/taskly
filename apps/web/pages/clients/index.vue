@@ -177,10 +177,11 @@ async function deleteClient(id: string) {
 
     <div v-else class="space-y-2">
       <p v-if="!filteredClients.length" class="card py-8 text-center text-gray-400">لا يوجد عملاء مطابقين للبحث</p>
-      <div
-        v-for="client in filteredClients"
+      <NuxtLink
+        v-for="client in filteredClients.slice(0, 100)"
         :key="client.id"
-        class="card flex items-center justify-between !py-3"
+        :to="`/clients/${client.id}`"
+        class="card flex items-center justify-between !py-3 hover:border-primary-300 hover:shadow-md transition-all cursor-pointer"
       >
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
@@ -211,11 +212,15 @@ async function deleteClient(id: string) {
           </div>
           <button
             v-if="authStore.isAdmin"
-            @click="deleteClient(client.id)"
+            @click.prevent="deleteClient(client.id)"
             class="text-xs text-red-500 hover:text-red-700"
           >حذف</button>
         </div>
-      </div>
+      </NuxtLink>
+    </div>
+    
+    <div v-if="filteredClients.length > 100" class="mt-4 text-center text-sm text-gray-500">
+      يتم عرض أول 100 عميل فقط. الرجاء استخدام البحث للوصول لعملاء محددين.
     </div>
 
     <!-- Create Modal -->

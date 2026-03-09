@@ -10,12 +10,14 @@ export async function sendTelegramMessage(
   text: string,
 ): Promise<boolean> {
   try {
-    const settings = await payload.findGlobal({ slug: 'system-settings' })
+    const settings = await payload.findGlobal({
+      slug: 'system-settings',
+      overrideAccess: true
+    }) as any
     if (!settings.telegramEnabled || !settings.telegramBotToken) {
       log.debug({ enabled: settings.telegramEnabled, hasToken: !!settings.telegramBotToken }, 'Telegram skipped')
       return false
     }
-
     const res = await fetch(
       `https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`,
       {
@@ -61,16 +63,26 @@ export async function getTelegramLinkUrl(
   userId: string,
 ): Promise<string | null> {
   try {
-    const settings = await payload.findGlobal({ slug: 'system-settings' })
-    if (!settings.telegramBotToken) return null
+    const settings = await payload.findGlobal({
+      slug: 'system-settings',
+      overrideAccess: true
+    }) as any // Using any to avoid TS errors
+    if (!settings.telegramBotToken) {
+      log.debug('telegramBotToken is missing')
+      return null
+    }
 
     const botUsername = settings.telegramBotUsername as string
-    if (!botUsername) return null
+    if (!botUsername) {
+      log.debug('telegramBotUsername is missing')
+      return null
+    }
 
     // Encode userId as base64 for the start parameter
     const token = Buffer.from(userId).toString('base64url')
     return `https://t.me/${botUsername}?start=${token}`
-  } catch {
+  } catch (err: any) {
+    log.error({ err: err.message || err }, 'getTelegramLinkUrl failed')
     return null
   }
 }

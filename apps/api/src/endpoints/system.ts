@@ -10,7 +10,7 @@ export const testTelegram: PayloadHandler = async (req) => {
     return Response.json({ error: 'غير مصرح' }, { status: 403 })
   }
 
-  const settings = await payload.findGlobal({ slug: 'system-settings' })
+  const settings = await payload.findGlobal({ slug: 'system-settings', overrideAccess: true }) as any
   if (!settings.telegramBotToken || !settings.telegramEnabled) {
     return Response.json({ error: 'تيليجرام غير مفعل أو لم يتم إدخال رمز البوت' }, { status: 400 })
   }

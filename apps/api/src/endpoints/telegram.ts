@@ -69,7 +69,7 @@ export const telegramWebhook: PayloadHandler = async (req) => {
  */
 async function processTelegramUpdates(payload: Payload) {
   try {
-    const settings = await payload.findGlobal({ slug: 'system-settings' })
+    const settings = await payload.findGlobal({ slug: 'system-settings', overrideAccess: true }) as any
     if (!settings.telegramBotToken) return
 
     const res = await fetch(
@@ -132,7 +132,7 @@ async function processStartMessage(payload: Payload, message: any) {
 
 async function sendBotMessage(payload: Payload, chatId: string, text: string) {
   try {
-    const settings = await payload.findGlobal({ slug: 'system-settings' })
+    const settings = await payload.findGlobal({ slug: 'system-settings', overrideAccess: true }) as any
     if (!settings.telegramBotToken) return
 
     await fetch(`https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`, {

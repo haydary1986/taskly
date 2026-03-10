@@ -7,10 +7,7 @@ export const SystemSettings: GlobalConfig = {
     group: 'النظام',
   },
   access: {
-    read: ({ req }) => {
-      if (!req.user) return false
-      return req.user.role === 'super-admin'
-    },
+    read: () => true,
     update: ({ req }) => {
       if (!req.user) return false
       return req.user.role === 'super-admin'
@@ -83,14 +80,8 @@ export const SystemSettings: GlobalConfig = {
           ],
         },
         {
-          label: 'التطبيق',
+          label: 'الهوية البصرية',
           fields: [
-            {
-              name: 'appIcon',
-              type: 'upload',
-              relationTo: 'media',
-              label: 'أيقونة التطبيق (PWA)',
-            },
             {
               name: 'appName',
               type: 'text',
@@ -102,6 +93,58 @@ export const SystemSettings: GlobalConfig = {
               type: 'text',
               label: 'اسم الشركة',
               defaultValue: 'ALGO-NEST',
+            },
+            {
+              name: 'appLogo',
+              type: 'upload',
+              relationTo: 'media',
+              label: 'شعار التطبيق',
+              admin: { description: 'يُعرض في الشريط الجانبي وصفحة تسجيل الدخول (يُفضل PNG شفاف)' },
+            },
+            {
+              name: 'appIcon',
+              type: 'upload',
+              relationTo: 'media',
+              label: 'أيقونة التطبيق (PWA)',
+              admin: { description: 'أيقونة مربعة للتطبيق على الجوال' },
+            },
+            {
+              name: 'appFavicon',
+              type: 'upload',
+              relationTo: 'media',
+              label: 'Favicon',
+              admin: { description: 'أيقونة تبويب المتصفح (32x32 أو SVG)' },
+            },
+            {
+              name: 'primaryColor',
+              type: 'text',
+              label: 'اللون الأساسي',
+              defaultValue: '#2563eb',
+              admin: { description: 'اللون الرئيسي للتطبيق (HEX) — مثال: #2563eb' },
+            },
+            {
+              name: 'accentColor',
+              type: 'text',
+              label: 'اللون الثانوي',
+              defaultValue: '#16a34a',
+              admin: { description: 'لون التمييز (HEX) — مثال: #16a34a' },
+            },
+            {
+              name: 'sidebarColor',
+              type: 'select',
+              label: 'لون الشريط الجانبي',
+              defaultValue: 'white',
+              options: [
+                { label: 'أبيض', value: 'white' },
+                { label: 'داكن', value: 'dark' },
+                { label: 'اللون الأساسي', value: 'primary' },
+              ],
+            },
+            {
+              name: 'loginBackground',
+              type: 'upload',
+              relationTo: 'media',
+              label: 'خلفية صفحة تسجيل الدخول',
             },
           ],
         },

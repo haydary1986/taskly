@@ -30,7 +30,7 @@ async function handleLogout() {
         {{ $route.meta.title || 'لوحة التحكم' }}
       </h2>
       <!-- Mobile logo -->
-      <h1 class="text-lg font-bold text-primary-600 lg:hidden">Taskly</h1>
+      <h1 class="text-lg font-bold text-primary-600 lg:hidden">{{ useBrandingStore().appName }}</h1>
     </div>
 
     <div class="flex items-center gap-1">

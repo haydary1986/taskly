@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const authStore = useAuthStore()
+const brandingStore = useBrandingStore()
 const route = useRoute()
 
 interface MenuItem {
@@ -147,9 +148,15 @@ const iconMap: Record<string, string> = {
 <template>
   <aside class="fixed right-0 top-0 z-30 hidden h-screen w-64 flex-col border-l border-gray-200 bg-white lg:flex dark:border-white/5 dark:bg-transparent">
     <!-- Logo -->
-    <div class="flex h-16 shrink-0 items-center border-b border-gray-200 px-6 dark:border-white/5">
-      <h1 class="text-xl font-bold text-primary-600">Taskly</h1>
-      <span class="mr-2 text-xs text-gray-400">ALGO-NEST</span>
+    <div class="flex h-16 shrink-0 items-center gap-2 border-b border-gray-200 px-6 dark:border-white/5">
+      <img v-if="brandingStore.logoUrl" :src="brandingStore.logoUrl" :alt="brandingStore.appName" class="h-8 w-auto max-w-[120px] object-contain" />
+      <template v-else>
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white font-bold text-sm">{{ brandingStore.appName?.charAt(0) || 'T' }}</div>
+      </template>
+      <div class="min-w-0">
+        <h1 class="text-lg font-bold text-primary-600 truncate">{{ brandingStore.appName }}</h1>
+        <span class="text-[10px] text-gray-400 block -mt-1 truncate">{{ brandingStore.companyName }}</span>
+      </div>
     </div>
 
     <!-- Menu grouped by section -->

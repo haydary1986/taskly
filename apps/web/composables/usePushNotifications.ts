@@ -24,7 +24,7 @@ export function usePushNotifications() {
 
   async function subscribe() {
     try {
-      const vapidRes = await api.get('/push-vapid-key')
+      const vapidRes = await api.get('/push/vapid-key')
       if (!vapidRes.publicKey) return
 
       const registration = await navigator.serviceWorker.ready
@@ -33,7 +33,7 @@ export function usePushNotifications() {
         applicationServerKey: urlBase64ToUint8Array(vapidRes.publicKey) as BufferSource,
       })
 
-      await api.post('/push-subscribe', { subscription: subscription.toJSON() })
+      await api.post('/push/subscribe', { subscription: subscription.toJSON() })
       isSubscribed.value = true
     } catch (err) {
       console.error('[Push] Subscribe failed:', err)
@@ -45,7 +45,7 @@ export function usePushNotifications() {
       const registration = await navigator.serviceWorker.ready
       const subscription = await registration.pushManager.getSubscription()
       if (subscription) {
-        await api.post('/push-unsubscribe', { endpoint: subscription.endpoint })
+        await api.post('/push/unsubscribe', { endpoint: subscription.endpoint })
         await subscription.unsubscribe()
       }
       isSubscribed.value = false

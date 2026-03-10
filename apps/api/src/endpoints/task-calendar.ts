@@ -18,7 +18,7 @@ export const taskCalendar: PayloadHandler = async (req) => {
 
     const where: Record<string, any> = {
         dueDate: {
-            greater_than: start,
+            greater_than_equal: start,
             less_than: end,
         },
         status: { not_equals: 'cancelled' },

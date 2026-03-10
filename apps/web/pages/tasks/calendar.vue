@@ -129,11 +129,11 @@ function isToday(d: Date) {
         <button @click="setToToday" class="btn-secondary py-1.5 px-3 text-sm">اليوم</button>
         <div class="flex items-center rounded-lg border border-gray-200 bg-white dark:border-white/10 dark:bg-transparent">
           <button @click="prevMonth" class="p-2 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-50">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
           </button>
           <span class="w-32 text-center text-sm font-semibold text-gray-900 dark:text-white">{{ monthName }}</span>
           <button @click="nextMonth" class="p-2 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
           </button>
         </div>
       </div>

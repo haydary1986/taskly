@@ -166,8 +166,8 @@ function getDuration(checkIn: string, checkOut?: string) {
                 <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold">
                   {{ visit.representative?.name?.charAt(0) || '؟' }}
                 </div>
-                <div v-if="visit.visitStatus === 'completed'" class="w-1 flex-1 bg-green-200 mt-2"></div>
-                <div v-else-if="visit.visitStatus === 'cancelled'" class="w-1 flex-1 bg-red-200 mt-2"></div>
+                <div v-if="visit.status === 'checked-out'" class="w-1 flex-1 bg-green-200 mt-2"></div>
+                <div v-else-if="visit.status === 'cancelled'" class="w-1 flex-1 bg-red-200 mt-2"></div>
                 <div v-else class="w-1 flex-1 bg-yellow-200 mt-2"></div>
               </div>
               
@@ -184,14 +184,13 @@ function getDuration(checkIn: string, checkOut?: string) {
             
             <div class="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 min-w-[120px]">
               <span class="badge" :class="{
-                'bg-green-100 text-green-700': visit.visitStatus === 'completed',
-                'bg-yellow-100 text-yellow-700': visit.visitStatus === 'in-progress',
-                'bg-red-100 text-red-700': visit.visitStatus === 'cancelled',
-                'bg-gray-100 text-gray-700': visit.visitStatus === 'new',
+                'bg-green-100 text-green-700': visit.status === 'checked-out',
+                'bg-yellow-100 text-yellow-700': visit.status === 'checked-in',
+                'bg-red-100 text-red-700': visit.status === 'cancelled',
               }">
-                 {{ visit.visitStatus === 'completed' ? 'مكتملة' : 
-                    visit.visitStatus === 'in-progress' ? 'قيد التنفيذ' : 
-                    visit.visitStatus === 'cancelled' ? 'ملغاة' : 'جديدة' }}
+                 {{ visit.status === 'checked-out' ? 'تم الخروج' :
+                    visit.status === 'checked-in' ? 'تم الدخول' :
+                    visit.status === 'cancelled' ? 'ملغاة' : visit.status }}
               </span>
               <span v-if="visit.checkOutTime" class="text-xs text-gray-500 font-mono">
                 المدة: {{ getDuration(visit.checkInTime, visit.checkOutTime) }}

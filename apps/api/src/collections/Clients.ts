@@ -87,6 +87,17 @@ export const Clients: CollectionConfig = {
       ],
     },
     {
+      name: 'company',
+      type: 'relationship',
+      relationTo: 'companies',
+      label: 'الشركة',
+    },
+    {
+      name: 'jobTitle',
+      type: 'text',
+      label: 'المسمى الوظيفي',
+    },
+    {
       name: 'notes',
       type: 'textarea',
       label: 'ملاحظات',

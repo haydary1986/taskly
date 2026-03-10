@@ -32,7 +32,7 @@ async function fetchVisits() {
       const start = new Date(dateFilter.value)
       const end = new Date(dateFilter.value)
       end.setDate(end.getDate() + 1)
-      where.checkInTime = { greater_than: start.toISOString(), less_than: end.toISOString() }
+      where.checkInTime = { greater_than_equal: start.toISOString(), less_than: end.toISOString() }
     }
     if (repFilter.value) where.representative = { equals: repFilter.value }
 

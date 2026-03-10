@@ -76,9 +76,12 @@ async function verify2FA() {
     toast.success('تم التحقق بنجاح')
     router.push('/')
   } catch (err: any) {
-    // Revert auth on failure
+    // Revert auth and 2FA state on failure
     authStore.logout()
-    error.value = 'رمز التحقق غير صحيح. حاول مجدداً.'
+    requires2FA.value = false
+    pendingToken.value = ''
+    pendingUser.value = null
+    error.value = 'رمز التحقق غير صحيح. يرجى تسجيل الدخول مجدداً.'
     twoFactorCode.value = ''
   } finally {
     loading.value = false

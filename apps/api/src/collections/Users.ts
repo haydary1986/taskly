@@ -92,6 +92,11 @@ export const Users: CollectionConfig = {
       admin: {
         hidden: true,
       },
+      access: {
+        read: () => false,
+        create: () => false,
+        update: () => false,
+      },
     },
     {
       name: 'telegramChatId',
@@ -125,6 +130,13 @@ export const Users: CollectionConfig = {
     },
   ],
   hooks: {
+    beforeLogin: [
+      async ({ user }) => {
+        if (!(user as any).isActive) {
+          throw new Error('هذا الحساب معطل. تواصل مع المدير.')
+        }
+      },
+    ],
     afterLogin: [
       async ({ req, user }) => {
         try {
@@ -148,6 +160,9 @@ export const Users: CollectionConfig = {
     ],
     afterError: [
       async ({ req }) => {
+        // Only log login-related errors
+        const url = req.url || ''
+        if (!url.includes('/login')) return
         try {
           let email = 'unknown'
           try {

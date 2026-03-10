@@ -19,10 +19,10 @@ export const dailyRoute: PayloadHandler = async (req) => {
     return Response.json({ error: 'غير مصرح لعرض مسار مندوب آخر' }, { status: 403 })
   }
 
-  const dayStart = new Date(dateStr)
-  dayStart.setHours(0, 0, 0, 0)
-  const dayEnd = new Date(dateStr)
-  dayEnd.setHours(23, 59, 59, 999)
+  // Use explicit timezone offset (Iraq = UTC+3) to avoid server timezone issues
+  const tz = process.env.TZ || 'Asia/Baghdad'
+  const dayStart = new Date(dateStr + 'T00:00:00.000+03:00')
+  const dayEnd = new Date(dateStr + 'T23:59:59.999+03:00')
 
   const visits = await payload.find({
     collection: 'visits',

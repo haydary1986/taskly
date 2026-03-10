@@ -24,7 +24,7 @@ export const Tasks: CollectionConfig = {
         if (data?.status === 'completed' && !data.completedAt) {
           data.completedAt = new Date().toISOString()
         }
-        if (data?.status !== 'completed') {
+        if (data?.status && data.status !== 'completed') {
           data.completedAt = null
         }
         return data

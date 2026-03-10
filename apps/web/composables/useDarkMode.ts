@@ -1,8 +1,8 @@
 const STORAGE_KEY = 'taskly_dark_mode'
 
-const isDark = ref(false)
-
 export function useDarkMode() {
+  const isDark = useState('taskly_dark', () => false)
+
   if (import.meta.client) {
     // Initialize from localStorage or system preference
     const stored = localStorage.getItem(STORAGE_KEY)

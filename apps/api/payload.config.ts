@@ -24,6 +24,14 @@ import { TaskComments } from './src/collections/TaskComments'
 import { TaskActivities } from './src/collections/TaskActivities'
 import { ProjectFiles } from './src/collections/ProjectFiles'
 import { PushSubscriptions } from './src/collections/PushSubscriptions'
+// CRM collections
+import { Companies } from './src/collections/Companies'
+import { Leads } from './src/collections/Leads'
+import { Deals } from './src/collections/Deals'
+import { Products } from './src/collections/Products'
+import { CrmActivities } from './src/collections/CrmActivities'
+import { Quotes } from './src/collections/Quotes'
+
 // New collections
 import { RefreshTokens } from './src/collections/RefreshTokens'
 import { MagicTokens } from './src/collections/MagicTokens'
@@ -53,6 +61,7 @@ import { verifyMagicLogin } from './src/endpoints/verify-magic-login'
 import { setup2FA, verify2FA, disable2FA } from './src/endpoints/two-factor'
 import { taskCalendar } from './src/endpoints/task-calendar'
 import { inbox } from './src/endpoints/inbox'
+import { dealsPipeline, crmStats, crmFunnel, convertLead, crmForecast } from './src/endpoints/crm'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -98,6 +107,12 @@ export default buildConfig({
     MagicTokens,
     AuditLogs,
     Webhooks,
+    Companies,
+    Leads,
+    Deals,
+    Products,
+    CrmActivities,
+    Quotes,
   ],
 
   globals: [SystemSettings],
@@ -132,6 +147,11 @@ export default buildConfig({
     { path: '/v1/2fa/disable', method: 'post', handler: disable2FA },
     { path: '/v1/task-calendar', method: 'get', handler: taskCalendar },
     { path: '/v1/inbox', method: 'get', handler: inbox },
+    { path: '/v1/crm/pipeline', method: 'get', handler: dealsPipeline },
+    { path: '/v1/crm/stats', method: 'get', handler: crmStats },
+    { path: '/v1/crm/funnel', method: 'get', handler: crmFunnel },
+    { path: '/v1/crm/leads/convert', method: 'post', handler: convertLead },
+    { path: '/v1/crm/forecast', method: 'get', handler: crmForecast },
 
     // ── Legacy routes (backward compatibility) ──────────
     { path: '/kpi', method: 'get', handler: kpiStats },

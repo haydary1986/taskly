@@ -51,7 +51,7 @@ async function renderMap() {
     mapInstance.remove()
   }
 
-  mapInstance = L.map(mapContainer.value).setView([24.7136, 46.6753], 10)
+  mapInstance = L.map(mapContainer.value).setView([33.3152, 44.3661], 10)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap',
   }).addTo(mapInstance)

@@ -59,6 +59,16 @@ const menuItems = computed(() => {
   // Clients
   if (isAdmin || isSales) items.push({ label: 'العملاء', icon: 'clients', to: '/clients', section: 'المبيعات' })
 
+  // CRM
+  if (isAdmin || isSales) {
+    items.push({ label: 'لوحة CRM', icon: 'crm', to: '/crm', section: 'CRM' })
+    items.push({ label: 'الشركات', icon: 'company', to: '/companies', section: 'CRM' })
+    items.push({ label: 'العملاء المحتملين', icon: 'leads', to: '/leads', section: 'CRM' })
+    items.push({ label: 'أنبوب المبيعات', icon: 'pipeline', to: '/deals', section: 'CRM' })
+    items.push({ label: 'المنتجات', icon: 'products', to: '/products', section: 'CRM' })
+    items.push({ label: 'عروض الأسعار', icon: 'quotes', to: '/quotes', section: 'CRM' })
+  }
+
   // Code review
   if (isAdmin || isProgrammer) items.push({ label: 'مراجعة الكود', icon: 'code', to: '/code-reviews', section: 'البرمجة' })
 
@@ -125,6 +135,12 @@ const iconMap: Record<string, string> = {
   profile: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
   kanban: 'M9 4h6v16H9V4zM3 4h4v10H3V4zm14 0h4v12h-4V4z',
   files: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z',
+  crm: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+  company: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+  leads: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z',
+  pipeline: 'M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12',
+  products: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+  quotes: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
 }
 </script>
 

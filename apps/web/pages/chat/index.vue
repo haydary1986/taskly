@@ -169,7 +169,7 @@ function isUserOnline(userId: string): boolean {
 function renderContent(text: string): string {
   if (!text) return ''
   // Escape HTML first
-  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   // Convert URLs to clickable links
   return escaped.replace(URL_REGEX, (url) =>
     `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline hover:text-blue-800 break-all" dir="ltr">${url}</a>`,
@@ -494,7 +494,7 @@ async function deleteMessage(msg: any) {
 async function toggleReaction(msgId: string, emoji: string) {
   showReactionPicker.value = null
   try {
-    const res = await api.post('/chat-react', { messageId: msgId, emoji })
+    const res = await api.post('/chat/reaction', { messageId: msgId, emoji })
     const idx = messages.value.findIndex((m) => m.id === msgId)
     if (idx >= 0) messages.value[idx].reactions = res.doc.reactions
   } catch (err) { console.error(err) }
@@ -519,7 +519,7 @@ function getAllReactions(reactions: any): { emoji: string; count: number; active
 // ── Pin ──
 async function togglePinMessage(msgId: string) {
   try {
-    const res = await api.post('/chat-pin', { messageId: msgId })
+    const res = await api.post('/chat/pin', { messageId: msgId })
     const idx = messages.value.findIndex((m) => m.id === msgId)
     if (idx >= 0) messages.value[idx].isPinned = res.doc.isPinned
   } catch (err) { console.error(err) }

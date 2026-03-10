@@ -22,6 +22,9 @@ export const kpiStats: PayloadHandler = async (req) => {
     if (tab === 'sales') {
       return computeSalesKPI(payload, startOfMonth)
     }
+    if (tab === 'crm') {
+      return computeCrmKPI(payload, startOfMonth)
+    }
     return computeProgrammerKPI(payload, startOfMonth)
   })
 
@@ -43,11 +46,11 @@ async function computeSalesKPI(payload: any, startOfMonth: Date) {
     payload.find({
       collection: 'visits',
       where: { checkInTime: { greater_than: startOfMonth.toISOString() } },
-      limit: 0,
+      limit: 10000,
       depth: 0,
     }),
     payload.count({ collection: 'clients' }),
-    payload.find({ collection: 'clients', where: { createdAt: { greater_than: startOfMonth.toISOString() } }, limit: 0 }),
+    payload.find({ collection: 'clients', where: { createdAt: { greater_than: startOfMonth.toISOString() } }, limit: 0, depth: 0 }),
   ])
 
   // Group visits by representative in-memory (fixes N+1)
@@ -85,6 +88,54 @@ async function computeSalesKPI(payload: any, startOfMonth: Date) {
   }
 }
 
+async function computeCrmKPI(payload: any, startOfMonth: Date) {
+  const [
+    totalDeals,
+    wonDeals,
+    lostDeals,
+    totalLeads,
+    convertedLeads,
+    newLeads,
+    wonDealsMonth,
+    totalCompanies,
+    totalQuotes,
+  ] = await Promise.all([
+    payload.count({ collection: 'deals' }),
+    payload.count({ collection: 'deals', where: { stage: { equals: 'won' } } }),
+    payload.count({ collection: 'deals', where: { stage: { equals: 'lost' } } }),
+    payload.count({ collection: 'leads' }),
+    payload.count({ collection: 'leads', where: { status: { equals: 'converted' } } }),
+    payload.count({ collection: 'leads', where: { createdAt: { greater_than: startOfMonth.toISOString() } } }),
+    payload.find({ collection: 'deals', where: { stage: { equals: 'won' }, closedAt: { greater_than: startOfMonth.toISOString() } }, limit: 10000, depth: 0 }),
+    payload.count({ collection: 'companies' }),
+    payload.count({ collection: 'quotes' }),
+  ])
+
+  const monthlyRevenue = wonDealsMonth.docs.reduce((sum: number, d: any) => sum + (d.value || 0), 0)
+  const winRate = (wonDeals.totalDocs + lostDeals.totalDocs) > 0
+    ? Math.round((wonDeals.totalDocs / (wonDeals.totalDocs + lostDeals.totalDocs)) * 100)
+    : 0
+  const conversionRate = totalLeads.totalDocs > 0
+    ? Math.round((convertedLeads.totalDocs / totalLeads.totalDocs) * 100)
+    : 0
+
+  return {
+    tab: 'crm',
+    totalDeals: totalDeals.totalDocs,
+    wonDeals: wonDeals.totalDocs,
+    lostDeals: lostDeals.totalDocs,
+    openDeals: totalDeals.totalDocs - wonDeals.totalDocs - lostDeals.totalDocs,
+    winRate,
+    totalLeads: totalLeads.totalDocs,
+    convertedLeads: convertedLeads.totalDocs,
+    newLeadsThisMonth: newLeads.totalDocs,
+    conversionRate,
+    monthlyRevenue,
+    totalCompanies: totalCompanies.totalDocs,
+    totalQuotes: totalQuotes.totalDocs,
+  }
+}
+
 async function computeProgrammerKPI(payload: any, startOfMonth: Date) {
   // Batch fetch: all programmers, completed tasks, and time entries
   const [allProgrammers, completedTasks, timeEntries] = await Promise.all([
@@ -96,13 +147,13 @@ async function computeProgrammerKPI(payload: any, startOfMonth: Date) {
         status: { equals: 'completed' },
         completedAt: { greater_than: startOfMonth.toISOString() },
       },
-      limit: 0,
+      limit: 10000,
       depth: 0,
     }),
     payload.find({
       collection: 'time-entries',
       where: { startTime: { greater_than: startOfMonth.toISOString() } },
-      limit: 0,
+      limit: 10000,
       depth: 0,
     }),
   ])

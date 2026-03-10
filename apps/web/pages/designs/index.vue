@@ -64,7 +64,7 @@ async function updateStatus(id: string, status: string) {
 // Kanban columns for designer view
 const kanbanColumns = computed(() => {
   const cols: Record<string, any[]> = {
-    requested: [], 'in-progress': [], 'in-review': [], approved: [], published: [],
+    requested: [], 'in-progress': [], 'in-review': [], approved: [], rejected: [], published: [],
   }
   requests.value.forEach((r) => { if (cols[r.status]) cols[r.status].push(r) })
   return cols

@@ -40,7 +40,8 @@ const filteredClients = computed(() => {
       c.name?.toLowerCase().includes(s) ||
       c.phone?.includes(s) ||
       c.email?.toLowerCase().includes(s) ||
-      c.address?.toLowerCase().includes(s),
+      c.address?.toLowerCase().includes(s) ||
+      c.city?.toLowerCase().includes(s),
     )
   }
   if (cityFilter.value) result = result.filter((c) => c.city === cityFilter.value)

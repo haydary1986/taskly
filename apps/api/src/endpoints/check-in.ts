@@ -96,6 +96,14 @@ export const checkOut: PayloadHandler = async (req) => {
 
   const { visitId, location } = validation.data
 
+  // Verify visit ownership
+  const existingVisit = await payload.findByID({ collection: 'visits', id: visitId, depth: 0 })
+  const repId = typeof (existingVisit as any).representative === 'object'
+    ? (existingVisit as any).representative.id : (existingVisit as any).representative
+  if (repId !== user.id) {
+    return Response.json({ error: 'لا يمكنك تسجيل خروج زيارة غير خاصة بك' }, { status: 403 })
+  }
+
   const visit = await payload.update({
     collection: 'visits',
     id: visitId,

@@ -100,7 +100,7 @@ function openEdit(task: any) {
     assignee: typeof task.assignee === 'object' ? task.assignee?.id : task.assignee || '',
     project: typeof task.project === 'object' ? task.project?.id : task.project || '',
     dueDate: task.dueDate?.split('T')[0] || '',
-    description: '',
+    description: task.description || '',
   })
   showCreateModal.value = true
 }
@@ -114,6 +114,7 @@ async function handleSubmit() {
     assignee: taskForm.assignee || null,
     project: taskForm.project || null,
     dueDate: taskForm.dueDate || null,
+    description: taskForm.description || undefined,
   }
 
   if (editingTask.value) {
@@ -232,7 +233,28 @@ async function handleDelete(id: string) {
       </div>
     </div>
 
-    <div v-else class="card py-12 text-center">
+    <!-- Pagination -->
+    <div v-if="tasksStore.totalDocs > 20" class="mt-4 flex items-center justify-center gap-3">
+      <button
+        @click="tasksStore.page--; tasksStore.fetchTasks()"
+        :disabled="tasksStore.page <= 1"
+        class="btn-secondary px-4 py-2 text-sm disabled:opacity-50"
+      >
+        السابق
+      </button>
+      <span class="text-sm text-gray-500">
+        صفحة {{ tasksStore.page }} من {{ Math.ceil(tasksStore.totalDocs / 20) }}
+      </span>
+      <button
+        @click="tasksStore.page++; tasksStore.fetchTasks()"
+        :disabled="tasksStore.tasks.length < 20"
+        class="btn-secondary px-4 py-2 text-sm disabled:opacity-50"
+      >
+        التالي
+      </button>
+    </div>
+
+    <div v-else-if="!tasksStore.loading && !tasksStore.tasks.length" class="card py-12 text-center">
       <p class="text-gray-400">لا توجد مهام</p>
     </div>
 

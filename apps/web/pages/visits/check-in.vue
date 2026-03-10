@@ -146,7 +146,11 @@ async function handleCheckIn() {
 
     // If we have notes, update the visit
     if (visitNotes.value.trim() && res.visit?.id) {
-      await api.patch(`/visits/${res.visit.id}`, { notes: visitNotes.value.trim() })
+      try {
+        await api.patch(`/visits/${res.visit.id}`, { notes: visitNotes.value.trim() })
+      } catch {
+        toast.warning('تم تسجيل الحضور لكن فشل حفظ الملاحظات')
+      }
     }
   } catch (err: any) { toast.error(err?.data?.error || 'حدث خطأ') }
   finally { checkingIn.value = false }

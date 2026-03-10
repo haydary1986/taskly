@@ -148,9 +148,20 @@ async function updatePassword() {
     return
   }
 
+  if (!passwordForm.currentPassword) {
+    passwordMessage.value = 'يرجى إدخال كلمة المرور الحالية'
+    return
+  }
+
   savingPassword.value = true
   passwordMessage.value = ''
   try {
+    // Verify current password first
+    await api.post('/users/login', {
+      email: authStore.user?.email,
+      password: passwordForm.currentPassword,
+    })
+    // Then change password
     await api.patch(`/users/${authStore.user?.id}`, {
       password: passwordForm.newPassword,
     })
@@ -287,6 +298,10 @@ async function updatePassword() {
       <h3 class="mb-4 text-lg font-semibold text-gray-900">تغيير كلمة المرور</h3>
 
       <form @submit.prevent="updatePassword" class="space-y-4">
+        <div>
+          <label class="label">كلمة المرور الحالية</label>
+          <input v-model="passwordForm.currentPassword" type="password" class="input" dir="ltr" required />
+        </div>
         <div>
           <label class="label">كلمة المرور الجديدة</label>
           <input v-model="passwordForm.newPassword" type="password" class="input" dir="ltr" required minlength="6" />

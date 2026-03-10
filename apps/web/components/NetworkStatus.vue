@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { isOnline } = useNetworkStatus()
-const { processQueue, queueLength } = useOfflineQueue()
+const { processQueue, pendingCount: queueLength } = useOfflineQueue()
 const syncing = ref(false)
 const showReconnected = ref(false)
 const wasOffline = ref(false)

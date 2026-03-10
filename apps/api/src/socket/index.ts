@@ -102,6 +102,37 @@ export function initSocket(httpServer: HttpServer) {
       log.info({ userId, role }, 'User connected')
     }
 
+    // ── Chat events relay ──
+    socket.on('chat:join-room', (roomId: string) => {
+      socket.join(`room:${roomId}`)
+    })
+
+    socket.on('chat:leave-room', (roomId: string) => {
+      socket.leave(`room:${roomId}`)
+    })
+
+    socket.on('chat:message', (data: any) => {
+      if (data.roomId) {
+        socket.to(`room:${data.roomId}`).emit('chat:message', data)
+      }
+    })
+
+    socket.on('chat:typing', (data: any) => {
+      if (data.roomId) {
+        socket.to(`room:${data.roomId}`).emit('chat:typing', {
+          userId,
+          userName: data.userName,
+          roomId: data.roomId,
+        })
+      }
+    })
+
+    socket.on('chat:message-deleted', (data: any) => {
+      if (data.roomId) {
+        socket.to(`room:${data.roomId}`).emit('chat:message-deleted', data)
+      }
+    })
+
     socket.on('disconnect', () => {
       const user = connectedUsers.get(userId)
       if (user) {

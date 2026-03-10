@@ -1,8 +1,8 @@
 const STORAGE_KEY = 'taskly_sound_enabled'
 
-const soundEnabled = ref(true)
-
 export function useSoundNotifications() {
+  const soundEnabled = useState('taskly_sound', () => true)
+
   if (import.meta.client) {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored !== null) soundEnabled.value = stored === 'true'

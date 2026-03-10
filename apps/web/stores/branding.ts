@@ -54,6 +54,37 @@ function generatePalette(hex: string): Record<string, string> {
   }
 }
 
+/** Build CSS overrides for Tailwind color classes */
+function buildColorCSS(prefix: string, palette: Record<string, string>): string {
+  const rules: string[] = []
+  for (const [shade, color] of Object.entries(palette)) {
+    // Background
+    rules.push(`.bg-${prefix}-${shade} { background-color: ${color} !important; }`)
+    // Text
+    rules.push(`.text-${prefix}-${shade} { color: ${color} !important; }`)
+    // Border
+    rules.push(`.border-${prefix}-${shade} { border-color: ${color} !important; }`)
+    // Ring
+    rules.push(`.ring-${prefix}-${shade} { --tw-ring-color: ${color} !important; }`)
+    // Focus variants
+    rules.push(`.focus\\:border-${prefix}-${shade}:focus { border-color: ${color} !important; }`)
+    rules.push(`.focus\\:ring-${prefix}-${shade}:focus { --tw-ring-color: ${color} !important; }`)
+    // Hover variants
+    rules.push(`.hover\\:bg-${prefix}-${shade}:hover { background-color: ${color} !important; }`)
+    rules.push(`.hover\\:text-${prefix}-${shade}:hover { color: ${color} !important; }`)
+    rules.push(`.hover\\:border-${prefix}-${shade}:hover { border-color: ${color} !important; }`)
+    // Dark variants
+    rules.push(`.dark .dark\\:bg-${prefix}-${shade} { background-color: ${color} !important; }`)
+    rules.push(`.dark .dark\\:text-${prefix}-${shade} { color: ${color} !important; }`)
+    rules.push(`.dark .dark\\:border-${prefix}-${shade} { border-color: ${color} !important; }`)
+    // Gradient
+    rules.push(`.from-${prefix}-${shade} { --tw-gradient-from: ${color} !important; }`)
+    rules.push(`.to-${prefix}-${shade} { --tw-gradient-to: ${color} !important; }`)
+    rules.push(`.via-${prefix}-${shade} { --tw-gradient-via: ${color} !important; }`)
+  }
+  return rules.join('\n')
+}
+
 function getMediaUrl(media: any, apiBase: string): string {
   if (!media) return ''
   if (typeof media === 'string') return media
@@ -117,22 +148,31 @@ export const useBrandingStore = defineStore('branding', {
 
     applyTheme() {
       if (import.meta.server) return
-      const root = document.documentElement
 
-      // Apply primary color palette
+      // Remove old theme style if exists
+      const existingStyle = document.getElementById('taskly-branding')
+      if (existingStyle) existingStyle.remove()
+
+      let css = ''
+
+      // Apply primary color palette override
       if (this.primaryColor && this.primaryColor !== '#2563eb') {
         const palette = generatePalette(this.primaryColor)
-        for (const [shade, value] of Object.entries(palette)) {
-          root.style.setProperty(`--color-primary-${shade}`, value)
-        }
+        css += buildColorCSS('primary', palette)
       }
 
-      // Apply accent color palette
+      // Apply accent color palette override
       if (this.accentColor && this.accentColor !== '#16a34a') {
         const palette = generatePalette(this.accentColor)
-        for (const [shade, value] of Object.entries(palette)) {
-          root.style.setProperty(`--color-accent-${shade}`, value)
-        }
+        css += buildColorCSS('accent', palette)
+      }
+
+      // Inject style tag
+      if (css) {
+        const style = document.createElement('style')
+        style.id = 'taskly-branding'
+        style.textContent = css
+        document.head.appendChild(style)
       }
 
       // Update favicon

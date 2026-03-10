@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /services
+Disallow: /tasks
+Disallow: /visits
+Disallow: /chat
+Disallow: /profile
+Disallow: /clients
+Disallow: /designs
+Disallow: /companies
+Disallow: /leads
+Disallow: /deals
+Disallow: /products
+Disallow: /quotes
+Disallow: /crm
+Disallow: /login
+Disallow: /magic-login
+Disallow: /api/
+
+Sitemap: https://taskly.algo-nest.com/sitemap.xml

@@ -29,6 +29,8 @@ export default defineNuxtConfig({
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3000',
       sentryDsn: process.env.NUXT_PUBLIC_SENTRY_DSN || '',
+      googleAnalyticsId: process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID || '',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://taskly.algo-nest.com',
     },
   },
 
@@ -42,6 +44,20 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#2563eb' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+        { name: 'google-site-verification', content: process.env.NUXT_PUBLIC_GOOGLE_SEARCH_CONSOLE_ID || '' },
+      ],
+      script: [
+        ...(process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID
+          ? [
+              {
+                src: `https://www.googletagmanager.com/gtag/js?id=${process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID}`,
+                async: true,
+              },
+              {
+                innerHTML: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID}');`,
+              },
+            ]
+          : []),
       ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },

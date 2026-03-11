@@ -16,6 +16,8 @@ export const verifyMagicLogin: PayloadHandler = async (req) => {
 
     const { token, email } = validation.data
 
+    log.info({ tokenPrefix: token?.substring(0, 8), email }, 'Verifying magic token')
+
     // Find the magic token
     const result = await payload.find({
         collection: 'magic-tokens',
@@ -29,6 +31,20 @@ export const verifyMagicLogin: PayloadHandler = async (req) => {
     })
 
     if (result.docs.length === 0) {
+        // Debug: check if token exists but is already used
+        const anyMatch = await payload.find({
+            collection: 'magic-tokens',
+            where: { token: { equals: token } },
+            limit: 1,
+            depth: 0,
+            overrideAccess: true,
+        })
+        if (anyMatch.docs.length > 0) {
+            const doc = anyMatch.docs[0] as any
+            log.warn({ tokenPrefix: token?.substring(0, 8), used: doc.used, expiresAt: doc.expiresAt }, 'Token found but already used or expired')
+        } else {
+            log.warn({ tokenPrefix: token?.substring(0, 8) }, 'Token not found in database at all')
+        }
         return Response.json({ error: 'رمز الدخول غير صالح أو تم استخدامه' }, { status: 401 })
     }
 

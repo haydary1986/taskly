@@ -50,8 +50,11 @@ export const magicLogin: PayloadHandler = async (req) => {
     overrideAccess: true,
   })
 
+  log.info({ tokenPrefix: token.substring(0, 8), userId: user.id }, 'Magic token created and stored')
+
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001'
   const magicLink = `${frontendUrl}/magic-login?token=${token}&email=${encodeURIComponent(email)}`
+  log.info({ frontendUrl, linkLength: magicLink.length }, 'Magic link generated')
 
   // Send via Telegram if user has linked account
   if (user.telegramChatId) {

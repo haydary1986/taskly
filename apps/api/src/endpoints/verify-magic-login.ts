@@ -2,6 +2,7 @@ import type { PayloadHandler } from 'payload'
 import { validateBody, verifyMagicLoginSchema } from '../lib/validators'
 import { issueRefreshToken } from './refresh-token'
 import { createLogger } from '../lib/logger'
+import { SignJWT } from 'jose'
 
 const log = createLogger('verify-magic-login')
 
@@ -63,13 +64,27 @@ export const verifyMagicLogin: PayloadHandler = async (req) => {
         return Response.json({ error: 'الحساب معطل' }, { status: 403 })
     }
 
-    // Issue JWT
-    const jwt = await import('jsonwebtoken')
-    const jwtToken = jwt.default.sign(
-        { id: user.id, email: user.email, role: user.role, collection: 'users' },
-        process.env.PAYLOAD_SECRET || 'default-secret-change-me',
-        { expiresIn: '2h' },
-    )
+    // Sign JWT using jose (same as Payload v3 internally)
+    // Must include: id, email, collection — same fields Payload uses
+    const collectionConfig = payload.collections['users'].config
+    const tokenExpiration = typeof collectionConfig.auth === 'object'
+        ? (collectionConfig.auth.tokenExpiration || 7200)
+        : 7200
+
+    const secret = payload.secret
+    const secretKey = new TextEncoder().encode(secret)
+    const issuedAt = Math.floor(Date.now() / 1000)
+    const exp = issuedAt + tokenExpiration
+
+    const jwtToken = await new SignJWT({
+        id: user.id,
+        email: user.email,
+        collection: 'users',
+    })
+        .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+        .setIssuedAt(issuedAt)
+        .setExpirationTime(exp)
+        .sign(secretKey)
 
     // Issue refresh token
     const refreshTokenValue = await issueRefreshToken(payload, user.id, 'magic-login')
@@ -78,7 +93,7 @@ export const verifyMagicLogin: PayloadHandler = async (req) => {
 
     return Response.json({
         token: jwtToken,
-        exp: Math.floor(Date.now() / 1000) + 7200,
+        exp,
         refreshToken: refreshTokenValue,
         user: {
             id: user.id,

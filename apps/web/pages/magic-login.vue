@@ -33,9 +33,8 @@ onMounted(async () => {
       if (res.token && res.user) {
         authStore.setAuth(res.user, res.token)
         verified.value = true
-        // Force full page reload so auth plugin runs fresh with the new token cookie
-        await nextTick()
-        window.location.href = '/'
+        // Use client-side navigation (same as normal login) — user & token are already in store
+        await navigateTo('/', { replace: true })
       }
     } catch (err: any) {
       verifyError.value = err?.data?.error || 'رابط غير صالح أو منتهي الصلاحية'

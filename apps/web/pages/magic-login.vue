@@ -23,11 +23,19 @@ onMounted(async () => {
   if (token && queryEmail) {
     verifying.value = true
     try {
-      const res = await api.post('/verify-magic-login', { token, email: queryEmail })
+      const config = useRuntimeConfig()
+      const resolvedApiBase = config.public.apiBase || 'https://api-task.algonest.tech'
+      // Call verify endpoint directly (not through useApi) to avoid any 401 interceptors
+      const res = await $fetch<any>(`${resolvedApiBase}/api/verify-magic-login`, {
+        method: 'POST',
+        body: { token, email: queryEmail },
+      })
       if (res.token && res.user) {
         authStore.setAuth(res.user, res.token)
         verified.value = true
-        router.push('/')
+        // Force full page reload so auth plugin runs fresh with the new token cookie
+        await nextTick()
+        window.location.href = '/'
       }
     } catch (err: any) {
       verifyError.value = err?.data?.error || 'رابط غير صالح أو منتهي الصلاحية'

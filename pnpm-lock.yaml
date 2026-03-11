@@ -59,6 +59,9 @@ importers:
       graphql:
         specifier: ^16
         version: 16.12.0
+      jose:
+        specifier: ^5.9.6
+        version: 5.9.6
       jsonwebtoken:
         specifier: ^9
         version: 9.0.3

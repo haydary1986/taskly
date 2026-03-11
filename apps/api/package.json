@@ -19,6 +19,7 @@
     "@taskly/shared": "workspace:*",
     "cross-env": "^7",
     "graphql": "^16",
+    "jose": "^5.9.6",
     "jsonwebtoken": "^9",
     "next": "15.5.10",
     "otpauth": "^9.5.0",

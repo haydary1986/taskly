@@ -1,4 +1,5 @@
 import type { PayloadHandler } from 'payload'
+import { jwtSign } from 'payload'
 import { validateBody, verifyMagicLoginSchema } from '../lib/validators'
 import { issueRefreshToken } from './refresh-token'
 import { createLogger } from '../lib/logger'
@@ -63,22 +64,23 @@ export const verifyMagicLogin: PayloadHandler = async (req) => {
         return Response.json({ error: 'الحساب معطل' }, { status: 403 })
     }
 
-    // Use jose (same library Payload v3 uses internally) to ensure 100% JWT compatibility
-    const { SignJWT } = await import('jose')
+    // Use Payload's own exported jwtSign function for 100% token compatibility
     const collectionConfig = payload.collections['users'].config
     const tokenExpiration = typeof collectionConfig.auth === 'object'
         ? (collectionConfig.auth.tokenExpiration || 7200)
         : 7200
 
-    const secretKey = new TextEncoder().encode(payload.secret)
-    const issuedAt = Math.floor(Date.now() / 1000)
-    const exp = issuedAt + tokenExpiration
-
-    const jwtToken = await new SignJWT({ id: user.id, email: user.email, collection: 'users' })
-        .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-        .setIssuedAt(issuedAt)
-        .setExpirationTime(exp)
-        .sign(secretKey)
+    // Include role field (saveToJWT: true in Users collection) — same as Payload's getFieldsToSign
+    const { token: jwtToken, exp } = await jwtSign({
+        fieldsToSign: {
+            id: user.id,
+            email: user.email,
+            collection: 'users',
+            role: user.role,
+        },
+        secret: payload.secret,
+        tokenExpiration,
+    })
 
     // Issue refresh token
     const refreshTokenValue = await issueRefreshToken(payload, user.id, 'magic-login')

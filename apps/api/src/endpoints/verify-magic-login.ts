@@ -1,5 +1,6 @@
 import type { PayloadHandler } from 'payload'
 import { jwtSign } from 'payload'
+import { addSessionToUser } from 'payload/shared'
 import { validateBody, verifyMagicLoginSchema } from '../lib/validators'
 import { issueRefreshToken } from './refresh-token'
 import { createLogger } from '../lib/logger'
@@ -86,14 +87,27 @@ export const verifyMagicLogin: PayloadHandler = async (req) => {
         ? (collectionConfig.auth.tokenExpiration || 7200)
         : 7200
 
+    // Create a session for the user (Payload v3.77+ requires `sid` in JWT to validate sessions)
+    const { sid } = await addSessionToUser({
+        collectionConfig,
+        payload,
+        req,
+        user,
+    })
+
     // Include role field (saveToJWT: true in Users collection) — same as Payload's getFieldsToSign
+    const fieldsToSign: Record<string, unknown> = {
+        id: user.id,
+        email: user.email,
+        collection: 'users',
+        role: user.role,
+    }
+    if (sid) {
+        fieldsToSign.sid = sid
+    }
+
     const { token: jwtToken, exp } = await jwtSign({
-        fieldsToSign: {
-            id: user.id,
-            email: user.email,
-            collection: 'users',
-            role: user.role,
-        },
+        fieldsToSign,
         secret: payload.secret,
         tokenExpiration,
     })

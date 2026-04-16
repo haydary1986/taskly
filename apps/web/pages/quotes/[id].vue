@@ -31,11 +31,9 @@ const creatingInvoice = ref(false)
 async function createInvoice(): Promise<void> {
   creatingInvoice.value = true
   try {
-    const res = await api.post('/v1/crm/invoices/from-quote', { quoteId: quote.value.id })
-    if (res.invoice?.id) {
-      toast.success('تم إنشاء الفاتورة')
-      await navigateTo(`/invoices/${res.invoice.id}`)
-    }
+    const res = await api.post('/pipeline/quote-to-invoice', { quoteId: quote.value.id })
+    toast.success(res.message || 'تم إنشاء الفاتورة')
+    await navigateTo(`/invoices/${res.doc.id}`)
   } catch (err: any) {
     const msg = err?.data?.error || err?.message || 'فشل إنشاء الفاتورة'
     toast.error(msg)

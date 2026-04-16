@@ -133,18 +133,37 @@ function selectClient(client: any) {
   showConfirm.value = true
 }
 
+const { enqueue, pendingCount: offlinePending } = useOfflineQueue()
+const { isOnline } = useNetworkStatus()
+
 async function handleCheckIn() {
   if (!selectedClient.value || !location.value) return
   checkingIn.value = true
+
+  const payload = {
+    clientId: selectedClient.value.id,
+    location: location.value,
+  }
+
+  // If offline, queue and show success with a note
+  if (!isOnline.value) {
+    await enqueue('POST', '/check-in', payload)
+    result.value = {
+      message: 'تم حفظ الزيارة (بدون اتصال) — ستُرسل عند العودة للإنترنت',
+      isValid: true,
+      offline: true,
+    }
+    showConfirm.value = false
+    checkingIn.value = false
+    toast.success('تم الحفظ محلياً')
+    return
+  }
+
   try {
-    const res = await api.post('/check-in', {
-      clientId: selectedClient.value.id,
-      location: location.value,
-    })
+    const res = await api.post('/check-in', payload)
     result.value = res
     showConfirm.value = false
 
-    // If we have notes, update the visit
     if (visitNotes.value.trim() && res.visit?.id) {
       try {
         await api.patch(`/visits/${res.visit.id}`, { notes: visitNotes.value.trim() })
@@ -152,8 +171,32 @@ async function handleCheckIn() {
         toast.warning('تم تسجيل الحضور لكن فشل حفظ الملاحظات')
       }
     }
-  } catch (err: any) { toast.error(err?.data?.error || 'حدث خطأ') }
-  finally { checkingIn.value = false }
+  } catch (err: any) {
+    // Network error → queue offline
+    if (!navigator.onLine) {
+      await enqueue('POST', '/check-in', payload)
+      result.value = { message: 'تم الحفظ محلياً — سيُزامن لاحقاً', isValid: true, offline: true }
+      showConfirm.value = false
+      toast.success('تم الحفظ محلياً')
+    } else {
+      toast.error(err?.data?.error || 'حدث خطأ')
+    }
+  } finally { checkingIn.value = false }
+}
+
+const creatingDeal = ref(false)
+async function createDealFromVisit() {
+  if (!result.value?.visit?.id) return
+  creatingDeal.value = true
+  try {
+    const res = await api.post('/pipeline/visit-to-deal', { visitId: result.value.visit.id })
+    toast.success(res.message || 'تم إنشاء الصفقة')
+    navigateTo(`/deals/${res.doc.id}`)
+  } catch (err: any) {
+    toast.error(err?.data?.error || 'فشل إنشاء الصفقة')
+  } finally {
+    creatingDeal.value = false
+  }
 }
 
 function resetAndNew() {
@@ -263,7 +306,12 @@ async function handleCreateClient() {
         <p class="mt-1 text-sm text-gray-500">{{ selectedClient?.name }}</p>
         <p v-if="result.distance" class="text-xs text-gray-400">المسافة: {{ result.distance }} متر</p>
         <p v-if="result.impossibleTravel" class="mt-2 text-sm font-medium text-red-600">تحذير: تم اكتشاف انتقال غير طبيعي!</p>
-        <button @click="resetAndNew" class="btn-primary mt-4">تسجيل زيارة أخرى</button>
+        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <button @click="createDealFromVisit" :disabled="creatingDeal" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
+            {{ creatingDeal ? 'جاري الإنشاء...' : '📋 إنشاء صفقة من الزيارة' }}
+          </button>
+          <button @click="resetAndNew" class="btn-primary">تسجيل زيارة أخرى</button>
+        </div>
       </div>
     </div>
 

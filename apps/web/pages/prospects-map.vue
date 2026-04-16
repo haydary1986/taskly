@@ -100,7 +100,10 @@ function coords(lead: Lead): [number, number] | null {
 
 const visitedIds = computed(() => {
   const ids = new Set<string>()
-  visits.value.forEach((v) => {
+  visits.value.forEach((v: any) => {
+    const companyId = typeof v.company === 'object' ? v.company?.id : v.company
+    if (companyId) ids.add(companyId)
+    // Backwards compatibility: older visits may still reference lead
     const leadId = typeof v.lead === 'object' ? v.lead?.id : v.lead
     if (leadId) ids.add(leadId)
   })
@@ -194,16 +197,23 @@ const stats = computed(() => ({
 
 async function load(): Promise<void> {
   try {
-    const [leadsRes, visitsRes, usersRes] = await Promise.all([
-      api.get('/leads', {
-        query: { limit: 2000, depth: 1, 'where[source][equals]': 'google-maps' },
+    const [companiesRes, visitsRes, usersRes] = await Promise.all([
+      api.get('/companies', {
+        query: {
+          limit: 2000,
+          depth: 1,
+          where: { location: { exists: true } },
+        },
       }),
       api.get('/visits', { query: { limit: 2000, depth: 0 } }),
       api.get('/users', {
-        query: { limit: 200, depth: 0, 'where[role][equals]': 'sales-rep' },
+        query: { limit: 200, depth: 0, where: { role: { equals: 'sales-rep' } } },
       }),
     ])
-    leads.value = leadsRes.docs
+    // Companies and Leads share the same logical shape after migration,
+    // so we keep the `leads` state name for compatibility with the rest
+    // of the page (filters, markers, popups) without a rewrite.
+    leads.value = companiesRes.docs
     visits.value = visitsRes.docs
     salesUsers.value = usersRes.docs
   } catch (err: unknown) {
@@ -263,6 +273,10 @@ function popupHtml(lead: Lead, lat: number, lng: number, visited: boolean): stri
     ? `<a href="tel:${lead.phone}" style="display:block;padding:6px;background:#2563eb;color:white;border-radius:6px;text-align:center;text-decoration:none;font-size:12px;font-weight:600">📞 اتصال</a>`
     : `<div style="padding:6px;background:#f3f4f6;color:#9ca3af;border-radius:6px;text-align:center;font-size:12px">لا يوجد هاتف</div>`
 
+  const takenByOther = isTakenByOther(lead)
+  const mine = isMine(lead)
+  const owner = ownerName(lead)
+
   const visitBtnHtml = takenByOther
     ? `<div style="width:100%;margin-top:6px;padding:6px;background:#e5e7eb;color:#6b7280;border-radius:6px;font-size:12px;text-align:center">محجوز — لا يمكنك تسجيل زيارة</div>`
     : `<button data-lead-id="${lead.id}" data-action="visit" class="prospect-action-btn" style="width:100%;margin-top:6px;padding:8px;background:#16a34a;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">${visited ? '🔁 تسجيل زيارة جديدة' : '✅ تسجيل زيارة'}</button>`
@@ -274,10 +288,6 @@ function popupHtml(lead: Lead, lat: number, lng: number, visited: boolean): stri
   const priorityBadge = lead.priority
     ? `<span style="display:inline-block;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;background:${lead.priority === 'A' ? '#fee2e2' : lead.priority === 'B' ? '#fef3c7' : '#dbeafe'};color:${lead.priority === 'A' ? '#991b1b' : lead.priority === 'B' ? '#92400e' : '#1e40af'}">${lead.priority}</span>`
     : ''
-
-  const takenByOther = isTakenByOther(lead)
-  const mine = isMine(lead)
-  const owner = ownerName(lead)
 
   const statusBadge = visited
     ? `<span style="display:inline-block;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;background:#dcfce7;color:#166534">تمت الزيارة</span>`
@@ -347,7 +357,7 @@ async function submitVisit(): Promise<void> {
   const c = coords(activeLead.value)
   try {
     await api.post('/visits', {
-      lead: activeLead.value.id,
+      company: activeLead.value.id,
       checkInTime: new Date().toISOString(),
       checkInLocation: c ? [c[0], c[1]] : undefined,
       outcome: visitForm.outcome,
@@ -373,7 +383,7 @@ async function submitTransfer(): Promise<void> {
   }
   transferring.value = true
   try {
-    await api.patch(`/leads/${activeLead.value.id}`, { assignedTo: transferForm.toUserId })
+    await api.patch(`/companies/${activeLead.value.id}`, { assignedTo: transferForm.toUserId })
     const newOwner = salesUsers.value.find((u) => u.id === transferForm.toUserId)
     toast.success(`تم نقل العميل إلى ${newOwner?.name ?? ''}`)
     showTransferModal.value = false

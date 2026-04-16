@@ -308,7 +308,7 @@ async function sendFileMessage() {
       replyTo: replyingTo.value?.id || undefined,
     })
     messages.value.push(msg.doc)
-    socket.emit('chat:message', { room: activeRoom.value.id, ...msg.doc })
+    socket.emit('chat:message', { roomId: activeRoom.value.id, ...msg.doc })
     newMessage.value = ''
     mentionedUsers.value = []
     replyingTo.value = null
@@ -359,7 +359,7 @@ async function sendMessage() {
       replyTo: replyToId,
     })
     messages.value.push(msg.doc)
-    socket.emit('chat:message', { room: activeRoom.value.id, ...msg.doc })
+    socket.emit('chat:message', { roomId: activeRoom.value.id, ...msg.doc })
     await nextTick()
     scrollToBottom()
   } catch (err) { console.error(err) }
@@ -369,7 +369,7 @@ async function sendMessage() {
 let typingTimeout: ReturnType<typeof setTimeout> | null = null
 function handleTyping() {
   if (typingTimeout) return
-  socket.emit('chat:typing', { room: activeRoom.value?.id, userId: authStore.user?.id, userName: authStore.user?.name })
+  socket.emit('chat:typing', { roomId: activeRoom.value?.id, userId: authStore.user?.id, userName: authStore.user?.name })
   typingTimeout = setTimeout(() => { typingTimeout = null }, 2000)
 }
 
@@ -390,6 +390,11 @@ async function createRoom() {
     roomForm.name = ''
     roomForm.members = []
     userSearch.value = ''
+    // Reset state before switching so the new empty room doesn't inherit
+    // messages/replies from the previously-active room
+    messages.value = []
+    replyingTo.value = null
+    unreadCounts.value[res.doc.id] = 0
     selectRoom(res.doc)
   } catch (err: any) { toast.error(err?.data?.errors?.[0]?.message || 'خطأ') }
 }
@@ -440,22 +445,42 @@ async function deleteRoom() {
 
 // ── Select Room ──
 async function selectRoom(room: any) {
+  // Leave previous room's socket channel
+  if (activeRoom.value && activeRoom.value.id !== room.id) {
+    socket.emit('chat:leave-room', activeRoom.value.id)
+  }
+
+  // Clear old room's messages and typing indicators immediately to avoid
+  // flashing stale content from the previous conversation
+  messages.value = []
+  typingUsers.value.clear()
+  replyingTo.value = null
+
   activeRoom.value = room
+  const selectedRoomId = room.id // snapshot to detect fast switches
   loadingMessages.value = true
   showSearch.value = false
   searchQuery.value = ''
+
+  // Join new room's socket channel
+  socket.emit('chat:join-room', selectedRoomId)
+
   try {
     const res = await api.get('/chat-messages', {
-      query: { where: { room: { equals: room.id } }, sort: 'createdAt', limit: 200, depth: 2 },
+      query: { where: { room: { equals: selectedRoomId } }, sort: 'createdAt', limit: 200, depth: 2 },
     })
+    // Only apply results if the user hasn't switched rooms during the fetch
+    if (activeRoom.value?.id !== selectedRoomId) return
     messages.value = res.docs
     // Mark as read
-    unreadCounts.value[room.id] = 0
-    saveLastRead(room.id)
+    unreadCounts.value[selectedRoomId] = 0
+    saveLastRead(selectedRoomId)
     await nextTick()
     scrollToBottom()
   } catch (err) { console.error(err) }
-  finally { loadingMessages.value = false }
+  finally {
+    if (activeRoom.value?.id === selectedRoomId) loadingMessages.value = false
+  }
 }
 
 // ── Reply ──
@@ -484,7 +509,7 @@ async function deleteMessage(msg: any) {
   try {
     await api.del(`/chat-messages/${msg.id}`)
     messages.value = messages.value.filter((m) => m.id !== msg.id)
-    socket.emit('chat:message-deleted', { room: activeRoom.value?.id, messageId: msg.id })
+    socket.emit('chat:message-deleted', { roomId: activeRoom.value?.id, messageId: msg.id })
   } catch (err: any) {
     toast.error(err?.data?.errors?.[0]?.message || 'حدث خطأ')
   }
@@ -593,44 +618,59 @@ onMounted(async () => {
   } catch (err) { console.error(err) }
   finally { loading.value = false }
 
-  // Socket events
-  socket.on('chat:message', (data: any) => {
-    if (activeRoom.value && data.room === activeRoom.value.id) {
-      // Avoid duplicates
+  // Socket events — extracted handlers so we can detach on unmount
+  const handleChatMessage = (data: any) => {
+    const incomingRoomId = data.roomId || data.room
+    if (activeRoom.value && incomingRoomId === activeRoom.value.id) {
       if (!messages.value.find((m) => m.id === data.id)) {
         messages.value.push(data)
         saveLastRead(activeRoom.value.id)
         nextTick(() => scrollToBottom())
       }
-    } else if (data.room) {
-      // Increment unread for non-active room
-      unreadCounts.value[data.room] = (unreadCounts.value[data.room] || 0) + 1
+    } else if (incomingRoomId) {
+      unreadCounts.value[incomingRoomId] = (unreadCounts.value[incomingRoomId] || 0) + 1
     }
-    const room = rooms.value.find((r) => r.id === data.room)
+    const room = rooms.value.find((r) => r.id === incomingRoomId)
     if (room) room._lastMessage = data
-  })
+  }
 
-  socket.on('chat:message-deleted', (data: any) => {
-    if (activeRoom.value && data.room === activeRoom.value.id) {
+  const handleChatMessageDeleted = (data: any) => {
+    const incomingRoomId = data.roomId || data.room
+    if (activeRoom.value && incomingRoomId === activeRoom.value.id) {
       messages.value = messages.value.filter((m) => m.id !== data.messageId)
     }
-  })
+  }
 
-  socket.on('chat:typing', (data: any) => {
-    if (data.userId !== authStore.user?.id && activeRoom.value?.id === data.room) {
+  const handleChatTyping = (data: any) => {
+    const incomingRoomId = data.roomId || data.room
+    if (data.userId !== authStore.user?.id && activeRoom.value?.id === incomingRoomId) {
       typingUsers.value.set(data.userId, data.userName)
       setTimeout(() => typingUsers.value.delete(data.userId), 3000)
     }
-  })
+  }
 
-  socket.on('users:online', (userIds: string[]) => {
-    onlineUserIds.value = new Set(userIds)
-  })
-  socket.on('user:online', (userId: string) => {
-    onlineUserIds.value.add(userId)
-  })
-  socket.on('user:offline', (userId: string) => {
-    onlineUserIds.value.delete(userId)
+  const handleUsersOnline = (userIds: string[]) => { onlineUserIds.value = new Set(userIds) }
+  const handleUserOnline = (userId: string) => { onlineUserIds.value.add(userId) }
+  const handleUserOffline = (userId: string) => { onlineUserIds.value.delete(userId) }
+
+  socket.on('chat:message', handleChatMessage)
+  socket.on('chat:message-deleted', handleChatMessageDeleted)
+  socket.on('chat:typing', handleChatTyping)
+  socket.on('users:online', handleUsersOnline)
+  socket.on('user:online', handleUserOnline)
+  socket.on('user:offline', handleUserOffline)
+
+  // Clean up listeners + leave active room when the page unmounts,
+  // otherwise HMR / route navigation leaves duplicate handlers which
+  // cause messages to appear in the wrong room.
+  onBeforeUnmount(() => {
+    socket.off('chat:message', handleChatMessage)
+    socket.off('chat:message-deleted', handleChatMessageDeleted)
+    socket.off('chat:typing', handleChatTyping)
+    socket.off('users:online', handleUsersOnline)
+    socket.off('user:online', handleUserOnline)
+    socket.off('user:offline', handleUserOffline)
+    if (activeRoom.value) socket.emit('chat:leave-room', activeRoom.value.id)
   })
 })
 </script>

@@ -230,6 +230,9 @@ const priorityLabel: Record<string, string> = {
       </div>
     </div>
 
+    <!-- Sales rep "today" dashboard — shown above everything else -->
+    <SalesToday v-if="authStore.role === 'sales-rep'" class="mb-8" />
+
     <!-- Dashboard content -->
     <div v-else-if="stats" class="space-y-6">
 

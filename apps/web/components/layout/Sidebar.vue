@@ -20,84 +20,68 @@ const menuItems = computed(() => {
   const isSocialMedia = role === 'social-media-manager'
 
   const items: MenuItem[] = [
-    { label: 'لوحة التحكم', icon: 'home', to: '/', section: 'رئيسي' },
+    // Every role starts on the dashboard
+    { label: 'لوحة اليوم', icon: 'home', to: '/', section: 'يومي' },
   ]
 
-  // KPI - admin only
-  if (isAdmin) items.push({ label: 'مؤشرات الأداء', icon: 'kpi', to: '/kpi', section: 'رئيسي' })
-
-  // Map - admin only
-  if (isAdmin) items.push({ label: 'الخريطة التفاعلية', icon: 'map', to: '/map', section: 'رئيسي' })
-
-  // Reports - admin only
-  if (isAdmin) items.push({ label: 'التقارير', icon: 'reports', to: '/reports', section: 'رئيسي' })
-
-  // Task management - admin
-  if (isAdmin) {
-    items.push({ label: 'إدارة المهام', icon: 'tasks', to: '/tasks', section: 'إدارة العمل' })
-    items.push({ label: 'كانبان', icon: 'kanban', to: '/tasks/kanban', section: 'إدارة العمل' })
-    items.push({ label: 'المشاريع', icon: 'projects', to: '/projects', section: 'إدارة العمل' })
+  // ── يومي (today's work — what a user needs to act on right now) ──
+  if (isSales) {
+    items.push({ label: 'إثبات الحضور', icon: 'checkin', to: '/visits/check-in', section: 'يومي' })
+    items.push({ label: 'خريطة العملاء', icon: 'prospects-map', to: '/prospects-map', section: 'يومي' })
+    items.push({ label: 'تقرير مساري', icon: 'map', to: '/visits/route-report', section: 'يومي' })
+    items.push({ label: 'زياراتي', icon: 'visits', to: '/visits', section: 'يومي' })
   }
-
-  // My Tasks - employees
-  if (isProgrammer || isSales || isDesigner || isSocialMedia) {
-    items.push({ label: 'مهامي', icon: 'my-tasks', to: '/tasks/my', section: 'إدارة العمل' })
+  if (isProgrammer || isDesigner || isSocialMedia) {
+    items.push({ label: 'مهامي', icon: 'my-tasks', to: '/tasks/my', section: 'يومي' })
   }
+  if (isProgrammer) items.push({ label: 'تتبع الوقت', icon: 'clock', to: '/time-tracking', section: 'يومي' })
+  if (isDesigner) items.push({ label: 'تصاميمي', icon: 'designs', to: '/designs', section: 'يومي' })
 
-  // Time tracking - programmer
-  if (isProgrammer) items.push({ label: 'تتبع الوقت', icon: 'clock', to: '/time-tracking', section: 'إدارة العمل' })
-
-  // Check-in - sales rep
-  if (isSales) items.push({ label: 'إثبات الحضور', icon: 'checkin', to: '/visits/check-in', section: 'المبيعات' })
-
-  // Visits
-  if (isAdmin) items.push({ label: 'سجل الزيارات', icon: 'visits', to: '/visits', section: 'المبيعات' })
-  if (isSales) items.push({ label: 'زياراتي', icon: 'visits', to: '/visits', section: 'المبيعات' })
-
-  // Daily route report
-  if (isAdmin || isSales) items.push({ label: 'تقرير المسار', icon: 'map', to: '/visits/route-report', section: 'المبيعات' })
-
-  // Clients
-  if (isAdmin || isSales) items.push({ label: 'العملاء', icon: 'clients', to: '/clients', section: 'المبيعات' })
-
-  // CRM
+  // ── المبيعات (unified CRM pipeline: prospect → client → deal → invoice) ──
   if (isAdmin || isSales) {
-    items.push({ label: 'لوحة CRM', icon: 'crm', to: '/crm', section: 'CRM' })
-    items.push({ label: 'الشركات', icon: 'company', to: '/companies', section: 'CRM' })
-    items.push({ label: 'العملاء المحتملين', icon: 'leads', to: '/leads', section: 'CRM' })
-    items.push({ label: 'خريطة العملاء المحتملين', icon: 'prospects-map', to: '/prospects-map', section: 'CRM' })
-    items.push({ label: 'أنبوب المبيعات', icon: 'pipeline', to: '/deals', section: 'CRM' })
-    items.push({ label: 'المنتجات', icon: 'products', to: '/products', section: 'CRM' })
-    items.push({ label: 'عروض الأسعار', icon: 'quotes', to: '/quotes', section: 'CRM' })
-    items.push({ label: 'الفواتير', icon: 'invoices', to: '/invoices', section: 'CRM' })
+    items.push({ label: 'لوحة CRM', icon: 'crm', to: '/crm', section: 'المبيعات' })
+    items.push({ label: 'الشركات', icon: 'company', to: '/companies', section: 'المبيعات' })
+    items.push({ label: 'خريطة الشركات', icon: 'prospects-map', to: '/prospects-map', section: 'المبيعات' })
+    items.push({ label: 'جهات الاتصال', icon: 'clients', to: '/clients', section: 'المبيعات' })
+    items.push({ label: 'أنبوب الصفقات', icon: 'pipeline', to: '/deals', section: 'المبيعات' })
+    items.push({ label: 'عروض الأسعار', icon: 'quotes', to: '/quotes', section: 'المبيعات' })
+    items.push({ label: 'الفواتير', icon: 'invoices', to: '/invoices', section: 'المبيعات' })
+    items.push({ label: 'المنتجات', icon: 'products', to: '/products', section: 'المبيعات' })
+  }
+  if (isAdmin) {
+    items.push({ label: 'سجل الزيارات', icon: 'visits', to: '/visits', section: 'المبيعات' })
   }
 
-  // Code review
-  if (isAdmin || isProgrammer) items.push({ label: 'مراجعة الكود', icon: 'code', to: '/code-reviews', section: 'البرمجة' })
+  // ── الفريق (task/project management for managers and creators) ──
+  if (isAdmin) {
+    items.push({ label: 'إدارة المهام', icon: 'tasks', to: '/tasks', section: 'الفريق' })
+    items.push({ label: 'لوحة كانبان', icon: 'kanban', to: '/tasks/kanban', section: 'الفريق' })
+    items.push({ label: 'المشاريع', icon: 'projects', to: '/projects', section: 'الفريق' })
+  }
+  if (isAdmin || isProgrammer) {
+    items.push({ label: 'مراجعة الكود', icon: 'code', to: '/code-reviews', section: 'الفريق' })
+  }
+  if (isAdmin || isSocialMedia) {
+    items.push({ label: 'طلبات التصميم', icon: 'designs', to: '/designs', section: 'الفريق' })
+  }
 
-  // Design requests
-  if (isAdmin || isSocialMedia) items.push({ label: 'طلبات التصميم', icon: 'designs', to: '/designs', section: 'التصميم' })
-  if (isDesigner) items.push({ label: 'تصاميمي', icon: 'designs', to: '/designs', section: 'التصميم' })
+  // ── التحليلات (visible to managers only) ──
+  if (isAdmin) {
+    items.push({ label: 'مؤشرات الأداء', icon: 'kpi', to: '/kpi', section: 'التحليلات' })
+    items.push({ label: 'التقارير', icon: 'reports', to: '/reports', section: 'التحليلات' })
+  }
 
-  // Files - all authenticated
-  items.push({ label: 'إدارة الملفات', icon: 'files', to: '/files', section: 'إدارة العمل' })
-
-  // Chat - all
+  // ── التواصل (chat + notifications — for everyone) ──
   items.push({ label: 'المحادثات', icon: 'chat', to: '/chat', section: 'التواصل' })
   items.push({ label: 'الإشعارات', icon: 'notifications', to: '/notifications', section: 'التواصل' })
+  items.push({ label: 'الملفات', icon: 'files', to: '/files', section: 'التواصل' })
 
-  // User management - admin
-  if (isAdmin) items.push({ label: 'المستخدمين', icon: 'users', to: '/users', section: 'النظام' })
-
-  // Security - super-admin + auditor
+  // ── النظام (admin-only tools) ──
+  if (isAdmin) items.push({ label: 'المستخدمون', icon: 'users', to: '/users', section: 'النظام' })
   if (isSecurity) items.push({ label: 'مركز الأمان', icon: 'security', to: '/security', section: 'النظام' })
-
-  // Settings - management only (super-admin + supervisor)
   const isManagement = ['super-admin', 'supervisor'].includes(role)
   if (isManagement) items.push({ label: 'إعدادات النظام', icon: 'settings', to: '/settings', section: 'النظام' })
-
-  // Profile - all
-  items.push({ label: 'الملف الشخصي', icon: 'profile', to: '/profile', section: 'النظام' })
+  items.push({ label: 'حسابي', icon: 'profile', to: '/profile', section: 'النظام' })
 
   return items
 })

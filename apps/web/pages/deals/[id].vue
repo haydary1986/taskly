@@ -18,6 +18,21 @@ const activityForm = reactive({
   type: 'call', subject: '', description: '', scheduledAt: '', duration: 0, callDirection: 'outgoing', meetingLocation: '',
 })
 
+const creatingQuote = ref(false)
+async function quickCreateQuote() {
+  if (!deal.value) return
+  creatingQuote.value = true
+  try {
+    const res = await api.post('/pipeline/deal-to-quote', { dealId: deal.value.id })
+    toast.success(res.message || 'تم إنشاء عرض السعر')
+    navigateTo(`/quotes/${res.doc.id}`)
+  } catch (err: any) {
+    toast.error(err?.data?.error || 'فشل إنشاء عرض السعر')
+  } finally {
+    creatingQuote.value = false
+  }
+}
+
 const stageLabels: Record<string, string> = { qualification: 'تأهيل', proposal: 'عرض سعر', negotiation: 'مفاوضة', won: 'مكسوبة', lost: 'خاسرة' }
 const stageColors: Record<string, string> = { qualification: 'bg-blue-100 text-blue-700', proposal: 'bg-yellow-100 text-yellow-700', negotiation: 'bg-orange-100 text-orange-700', won: 'bg-green-100 text-green-700', lost: 'bg-red-100 text-red-700' }
 const activityTypeLabels: Record<string, string> = { call: 'مكالمة', meeting: 'اجتماع', email: 'بريد إلكتروني', task: 'مهمة', note: 'ملاحظة', visit: 'زيارة', presentation: 'عرض تقديمي' }
@@ -118,6 +133,32 @@ function formatDate(d: string) {
       </div>
     </div>
 
+    <!-- Pipeline Progress: Visit → Deal → Quote → Invoice -->
+    <div class="card mb-6">
+      <p class="text-[10px] text-gray-400 mb-2 font-bold">مسار التحويل</p>
+      <div class="flex items-center gap-0">
+        <div class="flex-1 text-center">
+          <div class="mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-green-500 text-white text-xs font-bold">✓</div>
+          <span class="text-[10px] text-green-700 font-medium">زيارة</span>
+        </div>
+        <div class="h-0.5 w-6 shrink-0" :class="deal ? 'bg-green-400' : 'bg-gray-200'" />
+        <div class="flex-1 text-center">
+          <div class="mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold" :class="deal ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'">✓</div>
+          <span class="text-[10px] font-medium" :class="deal ? 'text-green-700' : 'text-gray-400'">صفقة</span>
+        </div>
+        <div class="h-0.5 w-6 shrink-0" :class="quotes.length ? 'bg-green-400' : 'bg-gray-200'" />
+        <div class="flex-1 text-center">
+          <div class="mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold" :class="quotes.length ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'">{{ quotes.length ? '✓' : '3' }}</div>
+          <span class="text-[10px] font-medium" :class="quotes.length ? 'text-green-700' : 'text-gray-400'">عرض سعر</span>
+        </div>
+        <div class="h-0.5 w-6 shrink-0" :class="deal?.stage === 'won' ? 'bg-green-400' : 'bg-gray-200'" />
+        <div class="flex-1 text-center">
+          <div class="mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold" :class="deal?.stage === 'won' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'">{{ deal?.stage === 'won' ? '✓' : '4' }}</div>
+          <span class="text-[10px] font-medium" :class="deal?.stage === 'won' ? 'text-green-700' : 'text-gray-400'">فاتورة</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Stage Progress -->
     <div class="card mb-6">
       <div class="flex items-center gap-1">
@@ -214,10 +255,9 @@ function formatDate(d: string) {
       <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
         <h3 class="font-bold">عروض الأسعار ({{ quotes.length }})</h3>
         <div class="flex items-center gap-2">
-          <NuxtLink
-            :to="`/quotes?deal=${deal.id}&create=1`"
-            class="btn-primary text-xs"
-          >+ عرض سعر جديد</NuxtLink>
+          <button @click="quickCreateQuote" :disabled="creatingQuote" class="btn-primary text-xs disabled:opacity-50">
+            {{ creatingQuote ? 'جاري الإنشاء...' : '⚡ إنشاء عرض سعر سريع' }}
+          </button>
           <NuxtLink v-if="quotes.length" :to="`/quotes?deal=${deal.id}`" class="text-xs text-primary-600 hover:underline">عرض الكل</NuxtLink>
         </div>
       </div>

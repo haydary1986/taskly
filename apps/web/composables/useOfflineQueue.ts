@@ -92,7 +92,7 @@ async function updatePendingCount() {
 }
 
 export function useOfflineQueue() {
-  const { $api } = useNuxtApp()
+  const api = useApi()
 
   /** Enqueue a request to be processed later */
   async function enqueue(method: QueueItem['method'], url: string, body?: any) {
@@ -105,7 +105,6 @@ export function useOfflineQueue() {
       retries: 0,
     })
     await updatePendingCount()
-    console.log(`[OfflineQueue] Queued ${method} ${url} (${pendingCount.value} pending)`)
   }
 
   /** Process all queued items */
@@ -118,47 +117,29 @@ export function useOfflineQueue() {
     let processed = 0
     let failed = 0
 
-    // Sort by timestamp (oldest first)
     items.sort((a, b) => a.timestamp - b.timestamp)
 
     for (const item of items) {
       try {
-        // Conflict detection: for PATCH/PUT, check if the server doc was updated after our change
-        if ((item.method === 'PATCH' || item.method === 'PUT') && item.body?._lastModified) {
-          try {
-            const serverDoc = await ($api as any)(item.url, { method: 'GET' })
-            if (serverDoc?.updatedAt && new Date(serverDoc.updatedAt).getTime() > item.timestamp) {
-              console.warn(`[OfflineQueue] Conflict detected for ${item.url}, server version is newer`)
-              // Mark as conflict - keep in queue with a flag
-              lastSyncError.value = `تعارض بيانات: ${item.url}`
-              failed++
-              continue
-            }
-          } catch {
-            // If GET fails, proceed with the update anyway
-          }
+        if (item.method === 'POST') {
+          await api.post(item.url, item.body)
+        } else if (item.method === 'PATCH') {
+          await api.patch(item.url, item.body)
+        } else if (item.method === 'PUT') {
+          await api.put(item.url, item.body)
+        } else if (item.method === 'DELETE') {
+          await api.del(item.url)
         }
-
-        await ($api as any)(item.url, {
-          method: item.method,
-          body: item.body,
-        })
 
         await removeItem(item.id)
         processed++
-      } catch (err: any) {
-        console.error(`[OfflineQueue] Failed to process ${item.method} ${item.url}:`, err)
+      } catch {
         failed++
-        // Don't remove failed items — they'll be retried
       }
     }
 
     await updatePendingCount()
     isSyncing.value = false
-
-    if (processed > 0) {
-      console.log(`[OfflineQueue] Processed ${processed} items, ${failed} failed, ${pendingCount.value} remaining`)
-    }
   }
 
   // Auto-process when coming back online

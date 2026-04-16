@@ -25,21 +25,19 @@ watch([searchQuery, sortBy], () => {
 })
 
 const roleLabels: Record<string, string> = {
-  'super-admin': 'مدير عام',
+  'super-admin': 'مدير النظام',
   supervisor: 'مشرف',
-  auditor: 'مراقب',
   'sales-rep': 'مندوب مبيعات',
-  programmer: 'مبرمج',
-  designer: 'مصمم',
-  'social-media-manager': 'مسؤول سوشيال ميديا',
+  programmer: 'موظف',
 }
 
 const roleColors: Record<string, string> = {
   'super-admin': 'bg-red-100 text-red-700',
   supervisor: 'bg-orange-100 text-orange-700',
-  auditor: 'bg-yellow-100 text-yellow-700',
   'sales-rep': 'bg-green-100 text-green-700',
   programmer: 'bg-blue-100 text-blue-700',
+  // Backward compat: old roles still display correctly
+  auditor: 'bg-yellow-100 text-yellow-700',
   designer: 'bg-purple-100 text-purple-700',
   'social-media-manager': 'bg-pink-100 text-pink-700',
 }

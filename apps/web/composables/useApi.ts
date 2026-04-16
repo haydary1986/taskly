@@ -1,4 +1,5 @@
 import { ofetch } from 'ofetch'
+import * as qs from 'qs-esm'
 
 export function useApi() {
   const config = useRuntimeConfig()
@@ -7,6 +8,16 @@ export function useApi() {
   // Nuxt's runtimeConfig sets apiBase to "" (empty string) if the Coolify Environment variable is unset/empty.
   // We must explicitly ensure we don't fetch from an empty base URL resulting in 404s.
   const resolvedApiBase = config.public.apiBase || 'https://api-task.algonest.tech'
+
+  // Payload's REST API expects bracket notation for nested filters
+  // (e.g. where[room][equals]=X). ofetch's default serializer emits
+  // JSON-encoded objects, which Payload silently ignores — so any `where`
+  // clause with a nested operator would return ALL documents instead of
+  // the filtered set. Rebuild the querystring with qs before sending.
+  function buildQueryString(params: Record<string, unknown> | undefined): string {
+    if (!params || Object.keys(params).length === 0) return ''
+    return qs.stringify(params, { addQueryPrefix: true, encode: true })
+  }
 
   const api = ofetch.create({
     baseURL: `${resolvedApiBase}/api`,
@@ -36,6 +47,17 @@ export function useApi() {
     },
   })
 
+  function request<T>(url: string, opts: Record<string, any> = {}): Promise<T> {
+    const { query, ...rest } = opts
+    const qsString = buildQueryString(query as Record<string, unknown> | undefined)
+    // Append the qs-serialized string to the URL ourselves; do NOT pass `query`
+    // to ofetch (it would re-serialize it as JSON, which Payload ignores).
+    const composed = qsString
+      ? `${url}${url.includes('?') ? '&' : '?'}${qsString.slice(1)}`
+      : url
+    return api<T>(composed, rest)
+  }
+
   /** Upload a file to media collection via FormData */
   async function upload(file: File, alt?: string) {
     const formData = new FormData()
@@ -54,11 +76,11 @@ export function useApi() {
   }
 
   return {
-    get: <T = any>(url: string, opts?: Record<string, any>) => api<T>(url, { method: 'GET', ...opts }),
-    post: <T = any>(url: string, body?: any, opts?: Record<string, any>) => api<T>(url, { method: 'POST', body, ...opts }),
-    patch: <T = any>(url: string, body?: any, opts?: Record<string, any>) => api<T>(url, { method: 'PATCH', body, ...opts }),
-    put: <T = any>(url: string, body?: any, opts?: Record<string, any>) => api<T>(url, { method: 'PUT', body, ...opts }),
-    del: <T = any>(url: string, opts?: Record<string, any>) => api<T>(url, { method: 'DELETE', ...opts }),
+    get: <T = any>(url: string, opts?: Record<string, any>) => request<T>(url, { method: 'GET', ...opts }),
+    post: <T = any>(url: string, body?: any, opts?: Record<string, any>) => request<T>(url, { method: 'POST', body, ...opts }),
+    patch: <T = any>(url: string, body?: any, opts?: Record<string, any>) => request<T>(url, { method: 'PATCH', body, ...opts }),
+    put: <T = any>(url: string, body?: any, opts?: Record<string, any>) => request<T>(url, { method: 'PUT', body, ...opts }),
+    del: <T = any>(url: string, opts?: Record<string, any>) => request<T>(url, { method: 'DELETE', ...opts }),
     upload,
   }
 }

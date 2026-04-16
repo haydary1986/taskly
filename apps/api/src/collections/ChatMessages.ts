@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { isAuthenticated } from '../access/roles'
 
 export const ChatMessages: CollectionConfig = {
   slug: 'chat-messages',
@@ -8,8 +7,48 @@ export const ChatMessages: CollectionConfig = {
     group: 'التواصل',
   },
   access: {
-    create: isAuthenticated,
-    read: isAuthenticated,
+    create: async ({ req, data }) => {
+      if (!req.user) return false
+      const role = req.user.role as string
+      if (['super-admin', 'supervisor'].includes(role)) return true
+      // Sender can only create messages in rooms they belong to
+      const roomId = data?.room ? (typeof data.room === 'object' ? data.room.id : data.room) : null
+      if (!roomId) return false
+      try {
+        const room = await req.payload.findByID({
+          collection: 'chat-rooms',
+          id: roomId,
+          overrideAccess: true,
+          depth: 0,
+        })
+        const memberIds = (room.members || []).map((m: unknown) =>
+          typeof m === 'object' && m !== null && 'id' in m ? String((m as { id: unknown }).id) : String(m),
+        )
+        return memberIds.includes(String(req.user.id))
+      } catch {
+        return false
+      }
+    },
+    read: async ({ req }) => {
+      if (!req.user) return false
+      const role = req.user.role as string
+      if (['super-admin', 'supervisor'].includes(role)) return true
+      // Restrict to messages in rooms where the user is a member
+      try {
+        const rooms = await req.payload.find({
+          collection: 'chat-rooms',
+          where: { members: { contains: req.user.id } },
+          limit: 1000,
+          depth: 0,
+          overrideAccess: true,
+        })
+        const roomIds = rooms.docs.map((r) => r.id)
+        if (roomIds.length === 0) return false
+        return { room: { in: roomIds } }
+      } catch {
+        return false
+      }
+    },
     update: ({ req }) => {
       if (!req.user) return false
       return { sender: { equals: req.user.id } }

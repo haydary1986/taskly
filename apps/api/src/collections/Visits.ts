@@ -16,7 +16,13 @@ export const Visits: CollectionConfig = {
       if (!req.user) return false
       return ['super-admin', 'supervisor', 'sales-rep'].includes(req.user.role as string)
     },
-    read: adminOrOwn('representative'),
+    // Sales reps can READ all visits (to avoid duplicate visits across the team),
+    // but can only UPDATE their own. Admins/supervisors have full access.
+    read: ({ req }) => {
+      if (!req.user) return false
+      const role = req.user.role as string
+      return ['super-admin', 'supervisor', 'auditor', 'sales-rep'].includes(role)
+    },
     update: adminOrOwn('representative'),
     delete: isAdmin,
   },
@@ -45,6 +51,29 @@ export const Visits: CollectionConfig = {
     ],
     afterChange: [
       async ({ doc, operation, req }) => {
+        // Update linked Company visit status (so team sees who already visited)
+        if (operation === 'create' && doc.company && req.user) {
+          const companyId = typeof doc.company === 'object' ? doc.company.id : doc.company
+          const repId = typeof doc.representative === 'object' ? doc.representative.id : doc.representative
+          const checkInTime = doc.checkInTime || new Date().toISOString()
+
+          try {
+            await req.payload.update({
+              collection: 'companies',
+              id: companyId,
+              data: {
+                visitStatus: 'visited',
+                lastVisit: doc.id,
+                lastVisitedBy: repId,
+                lastVisitedAt: checkInTime,
+              },
+              overrideAccess: true,
+            })
+          } catch (err: unknown) {
+            log.error({ err, companyId, visitId: doc.id }, 'Failed to update company visit status')
+          }
+        }
+
         if (operation !== 'create' || !doc.lead || !req.user) return doc
 
         const leadId = typeof doc.lead === 'object' ? doc.lead.id : doc.lead
@@ -111,6 +140,13 @@ export const Visits: CollectionConfig = {
       type: 'relationship',
       relationTo: 'leads',
       label: 'عميل محتمل',
+      index: true,
+    },
+    {
+      name: 'company',
+      type: 'relationship',
+      relationTo: 'companies',
+      label: 'الشركة',
       index: true,
     },
     {

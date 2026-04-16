@@ -20,6 +20,7 @@
     "nuxt": "^3",
     "ofetch": "^1",
     "pinia": "^2.3",
+    "qs-esm": "^8.0.1",
     "socket.io-client": "^4",
     "sortablejs": "^1.15.7",
     "vue": "^3",

@@ -55,13 +55,10 @@ export const Users: CollectionConfig = {
         update: managementFieldAccess,
       },
       options: [
-        { label: 'مدير عام', value: 'super-admin' },
+        { label: 'مدير النظام', value: 'super-admin' },
         { label: 'مشرف', value: 'supervisor' },
-        { label: 'مراقب', value: 'auditor' },
         { label: 'مندوب مبيعات', value: 'sales-rep' },
-        { label: 'مبرمج', value: 'programmer' },
-        { label: 'مصمم', value: 'designer' },
-        { label: 'مسؤول سوشيال ميديا', value: 'social-media-manager' },
+        { label: 'موظف', value: 'programmer' },
       ],
     },
     {

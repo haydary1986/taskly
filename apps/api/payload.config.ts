@@ -44,7 +44,7 @@ import { Webhooks } from './src/collections/Webhooks'
 import { SystemSettings } from './src/globals/SystemSettings'
 
 // Seed
-import { seedDemoData } from './src/seed'
+import { seedDemoData } from './src/seed/index'
 
 
 // Original endpoints
@@ -59,6 +59,10 @@ import { telegramLink, telegramStatus, telegramUnlink, telegramWebhook } from '.
 import { pushSubscribe, pushUnsubscribe, pushVapidKey } from './src/endpoints/push'
 import { toggleReaction, togglePin, onlineUsers } from './src/endpoints/chat'
 import { dailyRoute } from './src/endpoints/daily-route'
+import { salesToday } from './src/endpoints/sales-today'
+import { visitToDeal, dealToQuote, quoteToInvoice } from './src/endpoints/pipeline'
+import { dailyDigest, visitAlert } from './src/endpoints/smart-notifications'
+import { repPerformance } from './src/endpoints/kpi-auto'
 
 // New endpoints
 import { refreshToken } from './src/endpoints/refresh-token'
@@ -187,6 +191,16 @@ export default buildConfig({
     { path: '/chat/pin', method: 'post', handler: togglePin },
     { path: '/online-users', method: 'get', handler: onlineUsers },
     { path: '/daily-route', method: 'get', handler: dailyRoute },
+    { path: '/sales-today', method: 'get', handler: salesToday },
+    // Pipeline conversions
+    { path: '/pipeline/visit-to-deal', method: 'post', handler: visitToDeal },
+    { path: '/pipeline/deal-to-quote', method: 'post', handler: dealToQuote },
+    { path: '/pipeline/quote-to-invoice', method: 'post', handler: quoteToInvoice },
+    // Smart notifications
+    { path: '/smart-notifications/daily-digest', method: 'get', handler: dailyDigest },
+    { path: '/smart-notifications/visit-alert', method: 'post', handler: visitAlert },
+    // Auto KPI
+    { path: '/kpi/rep-performance', method: 'get', handler: repPerformance },
     { path: '/refresh-token', method: 'post', handler: refreshToken },
     { path: '/verify-magic-login', method: 'post', handler: verifyMagicLogin },
   ],

@@ -165,6 +165,9 @@ importers:
       pinia:
         specifier: ^2.3
         version: 2.3.1(typescript@5.9.3)(vue@3.5.28(typescript@5.9.3))
+      qs-esm:
+        specifier: ^8.0.1
+        version: 8.0.1
       socket.io-client:
         specifier: ^4
         version: 4.8.3
@@ -6510,6 +6513,10 @@ packages:
 
   qs-esm@7.0.2:
     resolution: {integrity: sha512-D8NAthKSD7SGn748v+GLaaO6k08Mvpoqroa35PqIQC4gtUa8/Pb/k+r0m0NnGBVbHDP1gKZ2nVywqfMisRhV5A==}
+    engines: {node: '>=18'}
+
+  qs-esm@8.0.1:
+    resolution: {integrity: sha512-eZ7l+0ZVy3He9c85pEM9KEBR9DFA4jrmWvIjm9wpcHvScwc/vgZDl2TNOF0pm0JsWKw24XBUZOY0Wxn7/nvJnw==}
     engines: {node: '>=18'}
 
   quansync@0.2.11:
@@ -15295,6 +15302,8 @@ snapshots:
       yargs: 15.4.1
 
   qs-esm@7.0.2: {}
+
+  qs-esm@8.0.1: {}
 
   quansync@0.2.11: {}
 

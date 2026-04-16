@@ -5,7 +5,7 @@ const log = createLogger('audit')
 
 interface AuditEntry {
     userId?: string
-    action: 'create' | 'update' | 'delete' | 'login' | 'logout'
+    action: 'create' | 'update' | 'delete' | 'soft-delete' | 'restore' | 'transfer' | 'login' | 'logout'
     collectionName: string
     documentId?: string
     changes?: Record<string, any>

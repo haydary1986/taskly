@@ -18,14 +18,21 @@ export const Clients: CollectionConfig = {
       if (!req.user) return false
       const role = req.user.role as string
       if (['super-admin', 'supervisor', 'auditor'].includes(role)) return true
-      if (role === 'sales-rep') return { createdBy: { equals: req.user.id } }
+      if (role === 'sales-rep') return true
       return false
     },
     update: ({ req }) => {
       if (!req.user) return false
       const role = req.user.role as string
       if (['super-admin', 'supervisor', 'auditor'].includes(role)) return true
-      if (role === 'sales-rep') return { createdBy: { equals: req.user.id } }
+      if (role === 'sales-rep') {
+        return {
+          or: [
+            { createdBy: { equals: req.user.id } },
+            { createdBy: { exists: false } },
+          ],
+        }
+      }
       return false
     },
     delete: isAdmin,

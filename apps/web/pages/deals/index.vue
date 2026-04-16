@@ -88,19 +88,71 @@ async function handleCreate() {
   finally { saving.value = false }
 }
 
-function onDragStart(deal: any) {
-  dragDeal.value = deal
-}
-
-async function onDrop(stage: string) {
-  if (!dragDeal.value || dragDeal.value.stage === stage) { dragDeal.value = null; return }
+async function moveDealToStage(dealId: string, stage: string): Promise<void> {
   try {
-    await api.patch(`/deals/${dragDeal.value.id}`, { stage })
+    await api.patch(`/deals/${dealId}`, { stage })
     toast.success('تم تحديث المرحلة')
     loadPipeline()
   } catch { toast.error('خطأ في التحديث') }
+}
+
+// Legacy HTML5 drag (kept for desktop fallback)
+function onDragStart(deal: any) {
+  dragDeal.value = deal
+}
+async function onDrop(stage: string) {
+  if (!dragDeal.value || dragDeal.value.stage === stage) { dragDeal.value = null; return }
+  await moveDealToStage(dragDeal.value.id, stage)
   dragDeal.value = null
 }
+
+// Touch-compatible Sortable.js for mobile/tablet
+const stageRefs = ref<Record<string, HTMLElement | null>>({})
+let sortables: any[] = []
+
+async function initSortable(): Promise<void> {
+  if (!import.meta.client) return
+  const { default: Sortable } = await import('sortablejs')
+  sortables.forEach((s) => s.destroy())
+  sortables = []
+  for (const stage of ['qualification', 'proposal', 'negotiation', 'won', 'lost']) {
+    const el = stageRefs.value[stage]
+    if (!el) continue
+    sortables.push(
+      Sortable.create(el, {
+        group: 'deals-pipeline',
+        animation: 150,
+        ghostClass: 'opacity-50',
+        delay: 150,
+        delayOnTouchOnly: true,
+        touchStartThreshold: 5,
+        onAdd: async (evt: any) => {
+          const dealId = evt.item?.getAttribute('data-deal-id')
+          if (dealId) await moveDealToStage(dealId, stage)
+        },
+      }),
+    )
+  }
+}
+
+watch(
+  () => Object.keys(pipeline.value).length,
+  async (n) => {
+    if (n > 0 && viewMode.value === 'pipeline') {
+      await nextTick()
+      await initSortable()
+    }
+  },
+)
+watch(viewMode, async (mode) => {
+  if (mode === 'pipeline') {
+    await nextTick()
+    await initSortable()
+  }
+})
+onBeforeUnmount(() => {
+  sortables.forEach((s) => s.destroy())
+})
 
 function formatCurrency(val: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val)
@@ -132,16 +184,20 @@ const totalPipelineValue = computed(() =>
       </div>
     </div>
 
-    <div v-if="loading" class="flex gap-4 overflow-x-auto pb-4">
-      <div v-for="i in 5" :key="i" class="min-w-[280px] card animate-pulse"><div class="h-40 rounded bg-gray-200" /></div>
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex gap-3 lg:gap-4 lg:overflow-x-auto pb-4">
+      <div v-for="i in 5" :key="i" class="w-full lg:min-w-[260px] card animate-pulse"><div class="h-40 rounded bg-gray-200" /></div>
     </div>
 
     <!-- Pipeline View (Kanban) -->
-    <div v-else-if="viewMode === 'pipeline'" class="flex gap-4 overflow-x-auto pb-4" style="min-height: 60vh;">
+    <div
+      v-else-if="viewMode === 'pipeline'"
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex gap-3 lg:gap-4 lg:overflow-x-auto pb-4"
+      style="min-height: 60vh;"
+    >
       <div
         v-for="stage in ['qualification', 'proposal', 'negotiation', 'won', 'lost']"
         :key="stage"
-        class="min-w-[280px] max-w-[300px] flex-1 flex flex-col rounded-xl border-2" :class="stageColors[stage]"
+        class="w-full lg:min-w-[260px] lg:max-w-[300px] lg:flex-1 flex flex-col rounded-xl border-2" :class="stageColors[stage]"
         @dragover.prevent
         @drop="onDrop(stage)"
       >
@@ -158,12 +214,13 @@ const totalPipelineValue = computed(() =>
         </div>
 
         <!-- Deals -->
-        <div class="flex-1 p-2 space-y-2 overflow-y-auto">
+        <div :ref="el => (stageRefs[stage] = el as HTMLElement | null)" class="flex-1 p-2 space-y-2 overflow-y-auto min-h-[80px]">
           <NuxtLink
             v-for="deal in (pipeline[stage]?.deals || [])"
             :key="deal.id"
             :to="`/deals/${deal.id}`"
-            class="block bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-grab border border-gray-100"
+            :data-deal-id="deal.id"
+            class="block bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-grab border border-gray-100 touch-manipulation"
             draggable="true"
             @dragstart="onDragStart(deal)"
           >

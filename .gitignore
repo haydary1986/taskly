@@ -18,3 +18,12 @@ media/
 *.dump
 *.bak
 *.mongo
+
+# Client data / spreadsheets (may contain PII)
+*.xlsx
+*.xls
+*.csv
+
+# Build artifacts
+tsconfig.tsbuildinfo
+*.tsbuildinfo

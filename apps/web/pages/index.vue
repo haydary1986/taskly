@@ -223,7 +223,7 @@ const priorityLabel: Record<string, string> = {
     </div>
 
     <!-- Loading state -->
-    <div v-if="loading" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div v-if="loading" class="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
       <div v-for="i in 4" :key="i" class="card animate-pulse">
         <div class="h-4 w-24 rounded bg-gray-200" />
         <div class="mt-3 h-8 w-16 rounded bg-gray-200" />
@@ -236,7 +236,7 @@ const priorityLabel: Record<string, string> = {
       <!-- ===== ADMIN DASHBOARD ===== -->
       <template v-if="authStore.isAdmin">
         <!-- Summary cards -->
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           <div class="card flex items-center gap-3">
             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-blue-100">
               <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -299,7 +299,7 @@ const priorityLabel: Record<string, string> = {
         </div>
 
         <!-- Charts row 1 -->
-        <div class="grid gap-4 lg:grid-cols-3">
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <!-- Task status doughnut -->
           <div class="card">
             <h3 class="mb-4 text-lg font-semibold text-gray-900">توزيع المهام حسب الحالة</h3>
@@ -326,7 +326,7 @@ const priorityLabel: Record<string, string> = {
         </div>
 
         <!-- Charts row 2 -->
-        <div class="grid gap-4 lg:grid-cols-2">
+        <div class="grid gap-4 md:grid-cols-2">
           <!-- Weekly trend line chart -->
           <div class="card">
             <h3 class="mb-4 text-lg font-semibold text-gray-900">الأداء الأسبوعي</h3>
@@ -345,7 +345,7 @@ const priorityLabel: Record<string, string> = {
         </div>
 
         <!-- Top performers + Recent tasks -->
-        <div class="grid gap-4 lg:grid-cols-2">
+        <div class="grid gap-4 md:grid-cols-2">
           <!-- Top performers -->
           <div class="card">
             <h3 class="mb-4 text-lg font-semibold text-gray-900">أفضل الموظفين هذا الشهر</h3>
@@ -420,7 +420,7 @@ const priorityLabel: Record<string, string> = {
       <!-- ===== EMPLOYEE DASHBOARD ===== -->
       <template v-else-if="stats.myTasks">
         <!-- Summary cards -->
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
           <div class="card flex items-center gap-3">
             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-100">
               <svg class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -478,7 +478,7 @@ const priorityLabel: Record<string, string> = {
         </div>
 
         <!-- Charts -->
-        <div class="grid gap-4 lg:grid-cols-2">
+        <div class="grid gap-4 md:grid-cols-2">
           <div class="card">
             <h3 class="mb-4 text-lg font-semibold text-gray-900">توزيع مهامي</h3>
             <div v-if="myTasksChart" class="h-64">

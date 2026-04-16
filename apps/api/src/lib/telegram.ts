@@ -52,7 +52,8 @@ export async function notifyUserViaTelegram(
     }
     log.debug({ userId, name: user.name }, 'Sending Telegram notification')
     return sendTelegramMessage(payload, user.telegramChatId as string, text)
-  } catch {
+  } catch (err: unknown) {
+    log.warn({ err, userId }, 'notifyUserViaTelegram failed')
     return false
   }
 }

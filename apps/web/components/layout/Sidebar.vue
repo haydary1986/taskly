@@ -65,9 +65,11 @@ const menuItems = computed(() => {
     items.push({ label: 'لوحة CRM', icon: 'crm', to: '/crm', section: 'CRM' })
     items.push({ label: 'الشركات', icon: 'company', to: '/companies', section: 'CRM' })
     items.push({ label: 'العملاء المحتملين', icon: 'leads', to: '/leads', section: 'CRM' })
+    items.push({ label: 'خريطة العملاء المحتملين', icon: 'prospects-map', to: '/prospects-map', section: 'CRM' })
     items.push({ label: 'أنبوب المبيعات', icon: 'pipeline', to: '/deals', section: 'CRM' })
     items.push({ label: 'المنتجات', icon: 'products', to: '/products', section: 'CRM' })
     items.push({ label: 'عروض الأسعار', icon: 'quotes', to: '/quotes', section: 'CRM' })
+    items.push({ label: 'الفواتير', icon: 'invoices', to: '/invoices', section: 'CRM' })
   }
 
   // Code review
@@ -139,9 +141,11 @@ const iconMap: Record<string, string> = {
   crm: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
   company: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
   leads: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z',
+  'prospects-map': 'M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z',
   pipeline: 'M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12',
   products: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
   quotes: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+  invoices: 'M9 14l6-6m-5.5 0.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z',
 }
 </script>
 

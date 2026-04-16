@@ -328,3 +328,97 @@ export const crmForecast: PayloadHandler = async (req) => {
 
   return Response.json({ forecast: months })
 }
+
+/** POST /v1/crm/soft-delete — Soft-delete a lead/deal/quote/visit */
+export const softDelete: PayloadHandler = async (req) => {
+  if (!req.user) return Response.json({ error: 'غير مصرح' }, { status: 401 })
+  let body: { collection?: string; id?: string; restore?: boolean } = {}
+  try {
+    body = await req.json!()
+  } catch {
+    return Response.json({ error: 'بيانات غير صالحة' }, { status: 400 })
+  }
+  const { collection, id, restore } = body
+  const allowed = ['leads', 'deals', 'quotes', 'visits', 'invoices']
+  if (!collection || !id || !allowed.includes(collection)) {
+    return Response.json({ error: 'مدخلات غير صالحة' }, { status: 400 })
+  }
+  try {
+    await req.payload.update({
+      collection: collection as 'leads',
+      id,
+      data: restore
+        ? ({ deletedAt: null, deletedBy: null } as Record<string, unknown>)
+        : ({ deletedAt: new Date().toISOString(), deletedBy: req.user.id } as Record<string, unknown>),
+      req,
+    })
+    const { logAudit } = await import('../lib/audit')
+    await logAudit(req.payload, {
+      userId: req.user.id as string,
+      action: restore ? 'restore' : 'soft-delete',
+      collectionName: collection,
+      documentId: id,
+    })
+    return Response.json({ success: true })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'فشل التنفيذ'
+    return Response.json({ error: msg }, { status: 403 })
+  }
+}
+
+/** POST /v1/crm/invoices/from-quote — Create an invoice from an accepted quote */
+export const invoiceFromQuote: PayloadHandler = async (req) => {
+  if (!req.user) return Response.json({ error: 'غير مصرح' }, { status: 401 })
+
+  let body: { quoteId?: string; dueDate?: string; paymentTerms?: string } = {}
+  try {
+    body = await req.json!()
+  } catch {
+    return Response.json({ error: 'بيانات غير صالحة' }, { status: 400 })
+  }
+  const { quoteId, dueDate, paymentTerms } = body
+  if (!quoteId) return Response.json({ error: 'معرف عرض السعر مطلوب' }, { status: 400 })
+
+  const quote: any = await req.payload.findByID({ collection: 'quotes', id: quoteId, depth: 1 })
+  if (!quote) return Response.json({ error: 'عرض السعر غير موجود' }, { status: 404 })
+  if (quote.status !== 'accepted') {
+    return Response.json({ error: 'يجب قبول عرض السعر أولاً' }, { status: 400 })
+  }
+
+  const existing = await req.payload.find({
+    collection: 'invoices',
+    where: { quote: { equals: quoteId } },
+    limit: 1,
+    overrideAccess: true,
+  })
+  if (existing.totalDocs > 0) {
+    return Response.json({ error: 'توجد فاتورة مسبقاً لهذا العرض', invoice: existing.docs[0] }, { status: 400 })
+  }
+
+  const invoice = await req.payload.create({
+    collection: 'invoices',
+    data: {
+      quote: quoteId,
+      deal: typeof quote.deal === 'object' ? quote.deal?.id : quote.deal,
+      client: typeof quote.contact === 'object' ? quote.contact?.id : quote.contact,
+      company: typeof quote.company === 'object' ? quote.company?.id : quote.company,
+      status: 'draft',
+      issuedAt: new Date().toISOString(),
+      dueDate: dueDate ?? undefined,
+      paymentTerms: paymentTerms ?? undefined,
+      items: (quote.items || []).map((it: any) => ({
+        description: it.description,
+        quantity: it.quantity,
+        unitPrice: it.unitPrice,
+        discount: it.discount || 0,
+      })),
+      taxRate: quote.taxRate || 0,
+      currency: quote.currency || 'USD',
+      notes: quote.termsAndConditions || undefined,
+    } as any,
+    req,
+  })
+
+  return Response.json({ invoice })
+}
+

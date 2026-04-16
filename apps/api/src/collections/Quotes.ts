@@ -1,5 +1,9 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin } from '../access/roles'
+import { sendNotification } from '../lib/notify'
+import { createLogger } from '../lib/logger'
+
+const log = createLogger('Quotes')
 
 export const Quotes: CollectionConfig = {
   slug: 'quotes',
@@ -18,14 +22,21 @@ export const Quotes: CollectionConfig = {
       if (!req.user) return false
       const role = req.user.role as string
       if (['super-admin', 'supervisor', 'auditor'].includes(role)) return true
-      if (role === 'sales-rep') return { createdBy: { equals: req.user.id } }
+      if (role === 'sales-rep') return { deletedAt: { exists: false } }
       return false
     },
     update: ({ req }) => {
       if (!req.user) return false
       const role = req.user.role as string
       if (['super-admin', 'supervisor', 'auditor'].includes(role)) return true
-      if (role === 'sales-rep') return { createdBy: { equals: req.user.id } }
+      if (role === 'sales-rep') {
+        return {
+          or: [
+            { createdBy: { equals: req.user.id } },
+            { createdBy: { exists: false } },
+          ],
+        }
+      }
       return false
     },
     delete: isAdmin,
@@ -52,6 +63,50 @@ export const Quotes: CollectionConfig = {
           data.total = subtotal + tax
         }
         return data
+      },
+    ],
+    afterChange: [
+      async ({ doc, operation, req, previousDoc }) => {
+        if (operation !== 'update') return doc
+        const prevStatus = previousDoc?.status
+        if (prevStatus === 'accepted' || doc.status !== 'accepted') return doc
+
+        const ownerId = typeof doc.createdBy === 'object' ? doc.createdBy?.id : doc.createdBy
+        if (!ownerId) return doc
+
+        try {
+          await sendNotification(req.payload, {
+            recipientId: String(ownerId),
+            type: 'quote-accepted',
+            title: '🎉 تم قبول عرض السعر',
+            message: `عرض السعر ${doc.quoteNumber} بقيمة ${doc.total} ${doc.currency || 'USD'} تم قبوله`,
+            link: `/quotes/${doc.id}`,
+            metadata: { quoteId: doc.id, dealId: doc.deal, total: doc.total },
+          })
+
+          // Upgrade linked deal stage to proposal (if still in earlier stage) or won
+          const dealId = typeof doc.deal === 'object' ? doc.deal?.id : doc.deal
+          if (dealId) {
+            const deal = await req.payload.findByID({ collection: 'deals', id: dealId, overrideAccess: true })
+            const upgradeMap: Record<string, string> = {
+              qualification: 'proposal',
+              proposal: 'negotiation',
+              negotiation: 'won',
+            }
+            const newStage = upgradeMap[deal.stage]
+            if (newStage) {
+              await req.payload.update({
+                collection: 'deals',
+                id: dealId,
+                data: { stage: newStage },
+                overrideAccess: true,
+              })
+            }
+          }
+        } catch (err: unknown) {
+          log.error({ err, quoteId: doc.id }, 'Failed quote-accepted notification/deal upgrade')
+        }
+        return doc
       },
     ],
   },
@@ -86,6 +141,14 @@ export const Quotes: CollectionConfig = {
           relationTo: 'clients',
           label: 'جهة الاتصال',
           admin: { width: '33%' },
+        },
+        {
+          name: 'lead',
+          type: 'relationship',
+          relationTo: 'leads',
+          label: 'العميل المحتمل',
+          admin: { width: '33%' },
+          index: true,
         },
       ],
     },
@@ -198,6 +261,18 @@ export const Quotes: CollectionConfig = {
       relationTo: 'users',
       label: 'أنشأ بواسطة',
       admin: { readOnly: true },
+    },
+    {
+      name: 'deletedAt',
+      type: 'date',
+      index: true,
+      admin: { readOnly: true, position: 'sidebar' },
+    },
+    {
+      name: 'deletedBy',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: { readOnly: true, position: 'sidebar' },
     },
   ],
   timestamps: true,

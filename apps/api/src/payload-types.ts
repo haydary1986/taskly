@@ -89,6 +89,14 @@ export interface Config {
     'magic-tokens': MagicToken;
     'audit-logs': AuditLog;
     webhooks: Webhook;
+    companies: Company;
+    leads: Lead;
+    deals: Deal;
+    products: Product;
+    'crm-activities': CrmActivity;
+    quotes: Quote;
+    invoices: Invoice;
+    'service-requests': ServiceRequest;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -103,6 +111,14 @@ export interface Config {
     };
     'chat-rooms': {
       messages: 'chat-messages';
+    };
+    companies: {
+      contacts: 'clients';
+      deals: 'deals';
+    };
+    deals: {
+      activities: 'crm-activities';
+      quotes: 'quotes';
     };
   };
   collectionsSelect: {
@@ -128,6 +144,14 @@ export interface Config {
     'magic-tokens': MagicTokensSelect<false> | MagicTokensSelect<true>;
     'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
     webhooks: WebhooksSelect<false> | WebhooksSelect<true>;
+    companies: CompaniesSelect<false> | CompaniesSelect<true>;
+    leads: LeadsSelect<false> | LeadsSelect<true>;
+    deals: DealsSelect<false> | DealsSelect<true>;
+    products: ProductsSelect<false> | ProductsSelect<true>;
+    'crm-activities': CrmActivitiesSelect<false> | CrmActivitiesSelect<true>;
+    quotes: QuotesSelect<false> | QuotesSelect<true>;
+    invoices: InvoicesSelect<false> | InvoicesSelect<true>;
+    'service-requests': ServiceRequestsSelect<false> | ServiceRequestsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -332,7 +356,17 @@ export interface Task {
 export interface Notification {
   id: string;
   recipient: string | User;
-  type: 'task-assigned' | 'task-updated' | 'comment' | 'security-alert' | 'visit' | 'system';
+  type:
+    | 'task-assigned'
+    | 'task-updated'
+    | 'comment'
+    | 'security-alert'
+    | 'visit'
+    | 'lead-transferred'
+    | 'quote-accepted'
+    | 'deal-won'
+    | 'deal-lost'
+    | 'system';
   title: string;
   message: string;
   isRead?: boolean | null;
@@ -366,6 +400,8 @@ export interface Client {
    */
   location?: [number, number] | null;
   tags?: ('vip' | 'new' | 'regular' | 'prospect' | 'inactive')[] | null;
+  company?: (string | null) | Company;
+  jobTitle?: string | null;
   notes?: string | null;
   uuid?: string | null;
   createdBy?: (string | null) | User;
@@ -379,13 +415,343 @@ export interface Client {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "companies".
+ */
+export interface Company {
+  id: string;
+  name: string;
+  industry?:
+    | (
+        | 'it'
+        | 'trade'
+        | 'manufacturing'
+        | 'services'
+        | 'real-estate'
+        | 'healthcare'
+        | 'education'
+        | 'finance'
+        | 'media'
+        | 'energy'
+        | 'other'
+      )
+    | null;
+  phone?: string | null;
+  email?: string | null;
+  website?: string | null;
+  address?: string | null;
+  city?: string | null;
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  location?: [number, number] | null;
+  status?: ('active' | 'inactive' | 'prospect') | null;
+  employeeCount?: ('1-10' | '11-50' | '51-200' | '201-500' | '500+') | null;
+  /**
+   * تقدير الإيرادات السنوية بالدولار
+   */
+  annualRevenue?: number | null;
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  logo?: (string | null) | Media;
+  createdBy?: (string | null) | User;
+  contacts?: {
+    docs?: (string | Client)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  deals?: {
+    docs?: (string | Deal)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "deals".
+ */
+export interface Deal {
+  id: string;
+  title: string;
+  company?: (string | null) | Company;
+  contact?: (string | null) | Client;
+  stage: 'qualification' | 'proposal' | 'negotiation' | 'won' | 'lost';
+  value: number;
+  currency?: ('USD' | 'IQD' | 'EUR') | null;
+  probability?: number | null;
+  assignedTo?: (string | null) | User;
+  expectedCloseDate?: string | null;
+  source?:
+    | (
+        | 'website'
+        | 'referral'
+        | 'social-media'
+        | 'advertisement'
+        | 'exhibition'
+        | 'cold-call'
+        | 'converted-lead'
+        | 'other'
+      )
+    | null;
+  products?:
+    | {
+        product: string | Product;
+        quantity: number;
+        unitPrice: number;
+        discount?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  lostReason?: ('price' | 'competitor' | 'delayed' | 'no-interest' | 'budget' | 'other') | null;
+  lead?: (string | null) | Lead;
+  closedAt?: string | null;
+  createdBy?: (string | null) | User;
+  activities?: {
+    docs?: (string | CrmActivity)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  quotes?: {
+    docs?: (string | Quote)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  deletedAt?: string | null;
+  deletedBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products".
+ */
+export interface Product {
+  id: string;
+  name: string;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  type: 'product' | 'service';
+  sku?: string | null;
+  price: number;
+  currency?: ('USD' | 'IQD' | 'EUR') | null;
+  category?: string | null;
+  image?: (string | null) | Media;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "leads".
+ */
+export interface Lead {
+  id: string;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  companyName?: string | null;
+  jobTitle?: string | null;
+  source:
+    | 'website'
+    | 'referral'
+    | 'social-media'
+    | 'advertisement'
+    | 'exhibition'
+    | 'cold-call'
+    | 'email-campaign'
+    | 'partner'
+    | 'google-maps'
+    | 'other';
+  status: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted' | 'lost';
+  estimatedValue?: number | null;
+  assignedTo?: (string | null) | User;
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  city?: string | null;
+  address?: string | null;
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  location?: [number, number] | null;
+  category?: string | null;
+  priority?: ('A' | 'B' | 'C') | null;
+  externalData?: {
+    placeId?: string | null;
+    mapsUrl?: string | null;
+    website?: string | null;
+    rating?: number | null;
+    reviewCount?: number | null;
+  };
+  convertedAt?: string | null;
+  convertedTo?: {
+    client?: (string | null) | Client;
+    deal?: (string | null) | Deal;
+    company?: (string | null) | Company;
+  };
+  createdBy?: (string | null) | User;
+  /**
+   * حذف مؤقت — يمكن استعادته
+   */
+  deletedAt?: string | null;
+  deletedBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "crm-activities".
+ */
+export interface CrmActivity {
+  id: string;
+  type: 'call' | 'meeting' | 'email' | 'task' | 'note' | 'visit' | 'presentation';
+  subject: string;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  contact?: (string | null) | Client;
+  company?: (string | null) | Company;
+  deal?: (string | null) | Deal;
+  assignedTo?: (string | null) | User;
+  scheduledAt?: string | null;
+  duration?: number | null;
+  callDirection?: ('outgoing' | 'incoming') | null;
+  callResult?: ('answered' | 'no-answer' | 'busy' | 'voicemail') | null;
+  meetingLocation?: string | null;
+  completed?: boolean | null;
+  completedAt?: string | null;
+  outcome?: string | null;
+  attachments?: (string | Media)[] | null;
+  createdBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quotes".
+ */
+export interface Quote {
+  id: string;
+  quoteNumber?: string | null;
+  deal?: (string | null) | Deal;
+  company?: (string | null) | Company;
+  contact?: (string | null) | Client;
+  lead?: (string | null) | Lead;
+  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  validUntil?: string | null;
+  items: {
+    product?: (string | null) | Product;
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    discount?: number | null;
+    id?: string | null;
+  }[];
+  currency?: ('USD' | 'IQD' | 'EUR') | null;
+  taxRate?: number | null;
+  subtotal?: number | null;
+  total?: number | null;
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  termsAndConditions?: string | null;
+  createdBy?: (string | null) | User;
+  deletedAt?: string | null;
+  deletedBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "visits".
  */
 export interface Visit {
   id: string;
-  client: string | Client;
+  client?: (string | null) | Client;
+  lead?: (string | null) | Lead;
   representative: string | User;
   status: 'checked-in' | 'checked-out' | 'cancelled';
+  outcome?: ('agreed' | 'interested' | 'pending' | 'callback' | 'no-answer' | 'rejected') | null;
   checkInTime: string;
   checkOutTime?: string | null;
   /**
@@ -664,7 +1030,7 @@ export interface MagicToken {
 export interface AuditLog {
   id: string;
   user?: (string | null) | User;
-  action: 'create' | 'update' | 'delete' | 'login' | 'logout';
+  action: 'create' | 'update' | 'delete' | 'soft-delete' | 'restore' | 'transfer' | 'login' | 'logout';
   collectionName: string;
   documentId?: string | null;
   /**
@@ -700,6 +1066,64 @@ export interface Webhook {
    */
   secret?: string | null;
   isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices".
+ */
+export interface Invoice {
+  id: string;
+  invoiceNumber?: string | null;
+  quote?: (string | null) | Quote;
+  deal?: (string | null) | Deal;
+  client?: (string | null) | Client;
+  company?: (string | null) | Company;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  issuedAt?: string | null;
+  dueDate?: string | null;
+  paidAt?: string | null;
+  items: {
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    discount?: number | null;
+    id?: string | null;
+  }[];
+  subtotal?: number | null;
+  taxRate?: number | null;
+  total?: number | null;
+  currency?: ('USD' | 'IQD') | null;
+  paymentTerms?: string | null;
+  notes?: string | null;
+  createdBy?: (string | null) | User;
+  deletedAt?: string | null;
+  deletedBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "service-requests".
+ */
+export interface ServiceRequest {
+  id: string;
+  companyName: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  service?: (string | null) | Product;
+  /**
+   * يُملأ تلقائياً في حال عدم اختيار منتج
+   */
+  serviceName?: string | null;
+  message?: string | null;
+  budget?: ('under-1k' | '1k-5k' | '5k-15k' | '15k-50k' | 'over-50k') | null;
+  status?: ('new' | 'reviewed' | 'contacted' | 'converted' | 'rejected') | null;
+  convertedToDeal?: (string | null) | Deal;
+  internalNotes?: string | null;
+  source?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -814,6 +1238,38 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'webhooks';
         value: string | Webhook;
+      } | null)
+    | ({
+        relationTo: 'companies';
+        value: string | Company;
+      } | null)
+    | ({
+        relationTo: 'leads';
+        value: string | Lead;
+      } | null)
+    | ({
+        relationTo: 'deals';
+        value: string | Deal;
+      } | null)
+    | ({
+        relationTo: 'products';
+        value: string | Product;
+      } | null)
+    | ({
+        relationTo: 'crm-activities';
+        value: string | CrmActivity;
+      } | null)
+    | ({
+        relationTo: 'quotes';
+        value: string | Quote;
+      } | null)
+    | ({
+        relationTo: 'invoices';
+        value: string | Invoice;
+      } | null)
+    | ({
+        relationTo: 'service-requests';
+        value: string | ServiceRequest;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -998,6 +1454,8 @@ export interface ClientsSelect<T extends boolean = true> {
   city?: T;
   location?: T;
   tags?: T;
+  company?: T;
+  jobTitle?: T;
   notes?: T;
   uuid?: T;
   createdBy?: T;
@@ -1011,8 +1469,10 @@ export interface ClientsSelect<T extends boolean = true> {
  */
 export interface VisitsSelect<T extends boolean = true> {
   client?: T;
+  lead?: T;
   representative?: T;
   status?: T;
+  outcome?: T;
   checkInTime?: T;
   checkOutTime?: T;
   checkInLocation?: T;
@@ -1248,6 +1708,240 @@ export interface WebhooksSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "companies_select".
+ */
+export interface CompaniesSelect<T extends boolean = true> {
+  name?: T;
+  industry?: T;
+  phone?: T;
+  email?: T;
+  website?: T;
+  address?: T;
+  city?: T;
+  location?: T;
+  status?: T;
+  employeeCount?: T;
+  annualRevenue?: T;
+  notes?: T;
+  logo?: T;
+  createdBy?: T;
+  contacts?: T;
+  deals?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "leads_select".
+ */
+export interface LeadsSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  email?: T;
+  companyName?: T;
+  jobTitle?: T;
+  source?: T;
+  status?: T;
+  estimatedValue?: T;
+  assignedTo?: T;
+  notes?: T;
+  city?: T;
+  address?: T;
+  location?: T;
+  category?: T;
+  priority?: T;
+  externalData?:
+    | T
+    | {
+        placeId?: T;
+        mapsUrl?: T;
+        website?: T;
+        rating?: T;
+        reviewCount?: T;
+      };
+  convertedAt?: T;
+  convertedTo?:
+    | T
+    | {
+        client?: T;
+        deal?: T;
+        company?: T;
+      };
+  createdBy?: T;
+  deletedAt?: T;
+  deletedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "deals_select".
+ */
+export interface DealsSelect<T extends boolean = true> {
+  title?: T;
+  company?: T;
+  contact?: T;
+  stage?: T;
+  value?: T;
+  currency?: T;
+  probability?: T;
+  assignedTo?: T;
+  expectedCloseDate?: T;
+  source?: T;
+  products?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        unitPrice?: T;
+        discount?: T;
+        id?: T;
+      };
+  notes?: T;
+  lostReason?: T;
+  lead?: T;
+  closedAt?: T;
+  createdBy?: T;
+  activities?: T;
+  quotes?: T;
+  deletedAt?: T;
+  deletedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products_select".
+ */
+export interface ProductsSelect<T extends boolean = true> {
+  name?: T;
+  description?: T;
+  type?: T;
+  sku?: T;
+  price?: T;
+  currency?: T;
+  category?: T;
+  image?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "crm-activities_select".
+ */
+export interface CrmActivitiesSelect<T extends boolean = true> {
+  type?: T;
+  subject?: T;
+  description?: T;
+  contact?: T;
+  company?: T;
+  deal?: T;
+  assignedTo?: T;
+  scheduledAt?: T;
+  duration?: T;
+  callDirection?: T;
+  callResult?: T;
+  meetingLocation?: T;
+  completed?: T;
+  completedAt?: T;
+  outcome?: T;
+  attachments?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quotes_select".
+ */
+export interface QuotesSelect<T extends boolean = true> {
+  quoteNumber?: T;
+  deal?: T;
+  company?: T;
+  contact?: T;
+  lead?: T;
+  status?: T;
+  validUntil?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        description?: T;
+        quantity?: T;
+        unitPrice?: T;
+        discount?: T;
+        id?: T;
+      };
+  currency?: T;
+  taxRate?: T;
+  subtotal?: T;
+  total?: T;
+  notes?: T;
+  termsAndConditions?: T;
+  createdBy?: T;
+  deletedAt?: T;
+  deletedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices_select".
+ */
+export interface InvoicesSelect<T extends boolean = true> {
+  invoiceNumber?: T;
+  quote?: T;
+  deal?: T;
+  client?: T;
+  company?: T;
+  status?: T;
+  issuedAt?: T;
+  dueDate?: T;
+  paidAt?: T;
+  items?:
+    | T
+    | {
+        description?: T;
+        quantity?: T;
+        unitPrice?: T;
+        discount?: T;
+        id?: T;
+      };
+  subtotal?: T;
+  taxRate?: T;
+  total?: T;
+  currency?: T;
+  paymentTerms?: T;
+  notes?: T;
+  createdBy?: T;
+  deletedAt?: T;
+  deletedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "service-requests_select".
+ */
+export interface ServiceRequestsSelect<T extends boolean = true> {
+  companyName?: T;
+  contactName?: T;
+  email?: T;
+  phone?: T;
+  service?: T;
+  serviceName?: T;
+  message?: T;
+  budget?: T;
+  status?: T;
+  convertedToDeal?: T;
+  internalNotes?: T;
+  source?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -1307,9 +2001,30 @@ export interface SystemSetting {
   smtpPass?: string | null;
   smtpFrom?: string | null;
   emailEnabled?: boolean | null;
-  appIcon?: (string | null) | Media;
   appName?: string | null;
   companyName?: string | null;
+  /**
+   * يُعرض في الشريط الجانبي وصفحة تسجيل الدخول (يُفضل PNG شفاف)
+   */
+  appLogo?: (string | null) | Media;
+  /**
+   * أيقونة مربعة للتطبيق على الجوال
+   */
+  appIcon?: (string | null) | Media;
+  /**
+   * أيقونة تبويب المتصفح (32x32 أو SVG)
+   */
+  appFavicon?: (string | null) | Media;
+  /**
+   * اللون الرئيسي للتطبيق (HEX) — مثال: #2563eb
+   */
+  primaryColor?: string | null;
+  /**
+   * لون التمييز (HEX) — مثال: #16a34a
+   */
+  accentColor?: string | null;
+  sidebarColor?: ('white' | 'dark' | 'primary') | null;
+  loginBackground?: (string | null) | Media;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1327,9 +2042,15 @@ export interface SystemSettingsSelect<T extends boolean = true> {
   smtpPass?: T;
   smtpFrom?: T;
   emailEnabled?: T;
-  appIcon?: T;
   appName?: T;
   companyName?: T;
+  appLogo?: T;
+  appIcon?: T;
+  appFavicon?: T;
+  primaryColor?: T;
+  accentColor?: T;
+  sidebarColor?: T;
+  loginBackground?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

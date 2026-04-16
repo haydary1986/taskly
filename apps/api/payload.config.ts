@@ -31,6 +31,7 @@ import { Deals } from './src/collections/Deals'
 import { Products } from './src/collections/Products'
 import { CrmActivities } from './src/collections/CrmActivities'
 import { Quotes } from './src/collections/Quotes'
+import { Invoices } from './src/collections/Invoices'
 import { ServiceRequests } from './src/collections/ServiceRequests'
 
 // New collections
@@ -41,6 +42,9 @@ import { Webhooks } from './src/collections/Webhooks'
 
 // Globals
 import { SystemSettings } from './src/globals/SystemSettings'
+
+// Seed
+import { seedDemoData } from './src/seed'
 
 
 // Original endpoints
@@ -62,7 +66,7 @@ import { verifyMagicLogin } from './src/endpoints/verify-magic-login'
 import { setup2FA, verify2FA, disable2FA } from './src/endpoints/two-factor'
 import { taskCalendar } from './src/endpoints/task-calendar'
 import { inbox } from './src/endpoints/inbox'
-import { dealsPipeline, crmStats, crmFunnel, convertLead, crmForecast } from './src/endpoints/crm'
+import { dealsPipeline, crmStats, crmFunnel, convertLead, crmForecast, invoiceFromQuote, softDelete } from './src/endpoints/crm'
 import { publicServices, requestService } from './src/endpoints/public-services'
 
 const filename = fileURLToPath(import.meta.url)
@@ -115,6 +119,7 @@ export default buildConfig({
     Products,
     CrmActivities,
     Quotes,
+    Invoices,
     ServiceRequests,
   ],
 
@@ -155,6 +160,8 @@ export default buildConfig({
     { path: '/v1/crm/funnel', method: 'get', handler: crmFunnel },
     { path: '/v1/crm/leads/convert', method: 'post', handler: convertLead },
     { path: '/v1/crm/forecast', method: 'get', handler: crmForecast },
+    { path: '/v1/crm/invoices/from-quote', method: 'post', handler: invoiceFromQuote },
+    { path: '/v1/crm/soft-delete', method: 'post', handler: softDelete },
     { path: '/v1/public/services', method: 'get', handler: publicServices },
     { path: '/v1/public/request-service', method: 'post', handler: requestService },
 
@@ -212,4 +219,12 @@ export default buildConfig({
   ].filter(Boolean),
 
   cookiePrefix: 'taskly',
+
+  onInit: async (payload) => {
+    try {
+      await seedDemoData(payload)
+    } catch (error) {
+      payload.logger.error('Seed failed:', error)
+    }
+  },
 })

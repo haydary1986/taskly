@@ -210,11 +210,18 @@ function formatDate(d: string) {
     </div>
 
     <!-- Quotes -->
-    <div v-if="quotes.length" class="card mb-6">
-      <div class="flex items-center justify-between mb-3">
+    <div class="card mb-6">
+      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
         <h3 class="font-bold">عروض الأسعار ({{ quotes.length }})</h3>
-        <NuxtLink :to="`/quotes?deal=${deal.id}`" class="text-xs text-primary-600 hover:underline">عرض الكل</NuxtLink>
+        <div class="flex items-center gap-2">
+          <NuxtLink
+            :to="`/quotes?deal=${deal.id}&create=1`"
+            class="btn-primary text-xs"
+          >+ عرض سعر جديد</NuxtLink>
+          <NuxtLink v-if="quotes.length" :to="`/quotes?deal=${deal.id}`" class="text-xs text-primary-600 hover:underline">عرض الكل</NuxtLink>
+        </div>
       </div>
+      <p v-if="!quotes.length" class="text-sm text-gray-400 text-center py-3">لا توجد عروض بعد</p>
       <div class="space-y-2">
         <NuxtLink v-for="q in quotes" :key="q.id" :to="`/quotes/${q.id}`"
           class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">

@@ -286,8 +286,13 @@ async function handleCreateClient() {
             </span>
             <span v-else class="text-red-700">{{ gpsError || 'فشل تحديد الموقع' }}</span>
           </div>
-          <button v-if="gpsStatus !== 'loading'" @click="captureGPS" class="btn-secondary !py-1 !px-2 text-xs">
-            {{ gpsStatus === 'success' ? 'تحديث' : 'تحديد' }}
+          <button
+            v-if="gpsStatus !== 'loading'"
+            type="button"
+            class="btn-secondary text-sm min-w-[88px] min-h-[44px]"
+            @click="captureGPS"
+          >
+            📍 {{ gpsStatus === 'success' ? 'تحديث' : 'تحديد' }}
           </button>
         </div>
       </div>

@@ -106,6 +106,33 @@ export default defineNuxtConfig({
           options: { cacheName: 'api-stale-cache', expiration: { maxEntries: 50, maxAgeSeconds: 60 * 30 }, cacheableResponse: { statuses: [0, 200] } },
         },
         {
+          urlPattern: /\/api\/leads(\?.*)?$/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'leads-cache',
+            expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: /\/api\/(clients|companies|visits|deals)(\?.*)?$/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'crm-cache',
+            expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 2 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: /https?:\/\/[a-z]+\.tile\.openstreetmap\.org\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'osm-tiles-cache',
+            expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
           urlPattern: /\/api\/media\/.*/i,
           handler: 'CacheFirst',
           options: { cacheName: 'media-cache', expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 }, cacheableResponse: { statuses: [0, 200] } },

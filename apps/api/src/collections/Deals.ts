@@ -1,6 +1,10 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin } from '../access/roles'
 import { socketService } from '../socket/index'
+import { sendNotification } from '../lib/notify'
+import { createLogger } from '../lib/logger'
+
+const log = createLogger('Deals')
 
 export const Deals: CollectionConfig = {
   slug: 'deals',
@@ -19,14 +23,21 @@ export const Deals: CollectionConfig = {
       if (!req.user) return false
       const role = req.user.role as string
       if (['super-admin', 'supervisor', 'auditor'].includes(role)) return true
-      if (role === 'sales-rep') return { assignedTo: { equals: req.user.id } }
+      if (role === 'sales-rep') return { deletedAt: { exists: false } }
       return false
     },
     update: ({ req }) => {
       if (!req.user) return false
       const role = req.user.role as string
       if (['super-admin', 'supervisor', 'auditor'].includes(role)) return true
-      if (role === 'sales-rep') return { assignedTo: { equals: req.user.id } }
+      if (role === 'sales-rep') {
+        return {
+          or: [
+            { assignedTo: { equals: req.user.id } },
+            { assignedTo: { exists: false } },
+          ],
+        }
+      }
       return false
     },
     delete: isAdmin,
@@ -54,28 +65,33 @@ export const Deals: CollectionConfig = {
         // Notify on stage change
         if (operation === 'update' && previousDoc?.stage !== doc.stage && doc.assignedTo) {
           const assignedToId = typeof doc.assignedTo === 'object' ? doc.assignedTo.id : doc.assignedTo
-          if (assignedToId !== req.user?.id) {
+          if (String(assignedToId) !== String(req.user?.id)) {
+            const stageLabels: Record<string, string> = {
+              qualification: 'تأهيل',
+              proposal: 'عرض سعر',
+              negotiation: 'مفاوضة',
+              won: 'مكسوبة',
+              lost: 'خاسرة',
+            }
+            const type =
+              doc.stage === 'won' ? 'deal-won' : doc.stage === 'lost' ? 'deal-lost' : 'system'
+            const title =
+              doc.stage === 'won'
+                ? '🎉 صفقة مكسوبة'
+                : doc.stage === 'lost'
+                ? '❌ صفقة خاسرة'
+                : 'تحديث صفقة'
             try {
-              const stageLabels: Record<string, string> = {
-                'qualification': 'تأهيل',
-                'proposal': 'عرض سعر',
-                'negotiation': 'مفاوضة',
-                'won': 'مكسوبة',
-                'lost': 'خاسرة',
-              }
-              await req.payload.create({
-                collection: 'notifications',
-                data: {
-                  recipient: assignedToId,
-                  type: 'system',
-                  title: 'تحديث صفقة',
-                  message: `تم تحديث حالة الصفقة "${doc.title}" إلى ${stageLabels[doc.stage] || doc.stage}`,
-                  link: `/deals/${doc.id}`,
-                },
-                req,
+              await sendNotification(req.payload, {
+                recipientId: String(assignedToId),
+                type,
+                title,
+                message: `"${doc.title}" → ${stageLabels[doc.stage] || doc.stage}${doc.value ? ` (${doc.value})` : ''}`,
+                link: `/deals/${doc.id}`,
+                metadata: { dealId: doc.id, stage: doc.stage, value: doc.value },
               })
-            } catch (err) {
-              console.error('[Deals] Notification error:', err)
+            } catch (err: unknown) {
+              log.error({ err, dealId: doc.id }, 'Deal notification failed')
             }
           }
         }
@@ -281,6 +297,18 @@ export const Deals: CollectionConfig = {
       type: 'join',
       collection: 'quotes',
       on: 'deal',
+    },
+    {
+      name: 'deletedAt',
+      type: 'date',
+      index: true,
+      admin: { readOnly: true, position: 'sidebar' },
+    },
+    {
+      name: 'deletedBy',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: { readOnly: true, position: 'sidebar' },
     },
   ],
   timestamps: true,

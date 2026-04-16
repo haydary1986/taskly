@@ -108,8 +108,8 @@ function formatCurrency(val: number) {
 
     <!-- Filters -->
     <div class="card mb-4">
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div class="sm:col-span-2">
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div class="md:col-span-2">
           <input v-model="search" type="text" class="input" placeholder="بحث بالاسم، الهاتف، البريد، الشركة..." />
         </div>
         <select v-model="leadsStore.filters.status" @change="leadsStore.fetchLeads()" class="input">

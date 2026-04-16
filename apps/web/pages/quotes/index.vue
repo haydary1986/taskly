@@ -15,9 +15,10 @@ const saving = ref(false)
 const deals = ref<any[]>([])
 const companies = ref<any[]>([])
 const products = ref<any[]>([])
+const leads = ref<any[]>([])
 
 const form = reactive({
-  deal: '', company: '', contact: '', validUntil: '', taxRate: 0, currency: 'USD',
+  deal: '', company: '', contact: '', lead: '', validUntil: '', taxRate: 0, currency: 'USD',
   items: [{ description: '', quantity: 1, unitPrice: 0, discount: 0, product: '' }] as any[],
   termsAndConditions: '',
 })
@@ -52,23 +53,31 @@ onMounted(async () => {
 
   loading.value = true
   try {
-    const [qRes, dRes, cRes, pRes] = await Promise.all([
+    const [qRes, dRes, cRes, pRes, lRes] = await Promise.all([
       api.get('/quotes', { query: { where, sort: '-createdAt', limit: 200, depth: 1 } }),
       api.get('/deals', { query: { limit: 500, depth: 0 } }),
       api.get('/companies', { query: { limit: 500, depth: 0 } }),
       api.get('/products', { query: { where: { isActive: { equals: true } }, limit: 500, depth: 0 } }),
+      api.get('/leads', { query: { limit: 2000, depth: 0, sort: '-createdAt' } }),
     ])
     quotes.value = qRes.docs
     deals.value = dRes.docs
     companies.value = cRes.docs
     products.value = pRes.docs
+    leads.value = lRes.docs
   } catch (err) { console.error(err) }
   finally { loading.value = false }
+
+  // Auto-open create modal if ?create=1 present
+  if (route.query.create === '1') {
+    openCreate()
+    if (route.query.lead) form.lead = route.query.lead as string
+  }
 })
 
 function openCreate() {
   Object.assign(form, {
-    deal: route.query.deal || '', company: '', contact: '', validUntil: '', taxRate: 0, currency: 'USD',
+    deal: route.query.deal || '', company: '', contact: '', lead: '', validUntil: '', taxRate: 0, currency: 'USD',
     items: [{ description: '', quantity: 1, unitPrice: 0, discount: 0, product: '' }],
     termsAndConditions: '',
   })
@@ -93,6 +102,28 @@ function onProductSelect(item: any) {
   }
 }
 
+async function createCompanyInline(name: string): Promise<void> {
+  try {
+    const res = await api.post('/companies', { name })
+    companies.value.push(res.doc)
+    form.company = res.doc.id
+    toast.success(`تم إضافة الشركة: ${name}`)
+  } catch (err: any) {
+    toast.error(err?.data?.errors?.[0]?.message || 'فشل إضافة الشركة')
+  }
+}
+
+async function createDealInline(title: string): Promise<void> {
+  try {
+    const res = await api.post('/deals', { title, stage: 'qualification' })
+    deals.value.push(res.doc)
+    form.deal = res.doc.id
+    toast.success(`تم إضافة الصفقة: ${title}`)
+  } catch (err: any) {
+    toast.error(err?.data?.errors?.[0]?.message || 'فشل إضافة الصفقة')
+  }
+}
+
 async function handleCreate() {
   saving.value = true
   try {
@@ -101,6 +132,7 @@ async function handleCreate() {
       deal: form.deal || undefined,
       company: form.company || undefined,
       contact: form.contact || undefined,
+      lead: form.lead || undefined,
       validUntil: form.validUntil || undefined,
       items: form.items.map((item) => ({
         ...item,
@@ -177,9 +209,41 @@ function formatDate(d: string) {
         <div class="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
           <h2 class="mb-4 text-lg font-bold">عرض سعر جديد</h2>
           <form @submit.prevent="handleCreate" class="space-y-4">
-            <div class="grid grid-cols-3 gap-3">
-              <div><label class="label">الصفقة</label><select v-model="form.deal" class="input"><option value="">بدون</option><option v-for="d in deals" :key="d.id" :value="d.id">{{ d.title }}</option></select></div>
-              <div><label class="label">الشركة</label><select v-model="form.company" class="input"><option value="">بدون</option><option v-for="c in companies" :key="c.id" :value="c.id">{{ c.name }}</option></select></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="label">العميل المحتمل (من Google Maps)</label>
+                <FormSearchableSelect
+                  v-model="form.lead"
+                  :options="leads"
+                  label-key="name"
+                  :placeholder="`ابحث من ${leads.length} عميل محتمل...`"
+                />
+                <p class="text-[10px] text-gray-400 mt-1">اختر واحداً من العملاء المستوردين أو استخدم حقل الشركة أدناه</p>
+              </div>
+              <div>
+                <label class="label">الشركة</label>
+                <FormSearchableSelect
+                  v-model="form.company"
+                  :options="companies"
+                  label-key="name"
+                  placeholder="ابحث عن الشركة..."
+                  allow-create
+                  create-label="+ إضافة شركة"
+                  @create="createCompanyInline"
+                />
+              </div>
+              <div>
+                <label class="label">الصفقة</label>
+                <FormSearchableSelect
+                  v-model="form.deal"
+                  :options="deals"
+                  label-key="title"
+                  placeholder="ابحث عن صفقة..."
+                  allow-create
+                  create-label="+ إنشاء صفقة"
+                  @create="createDealInline"
+                />
+              </div>
               <div><label class="label">صالح حتى</label><input v-model="form.validUntil" type="date" class="input" /></div>
             </div>
 
@@ -189,19 +253,19 @@ function formatDate(d: string) {
                 <label class="label !mb-0">البنود *</label>
                 <button type="button" @click="addItem" class="text-xs text-primary-600 hover:underline">+ إضافة بند</button>
               </div>
-              <div v-for="(item, i) in form.items" :key="i" class="grid grid-cols-12 gap-2 mb-2 items-end">
-                <div class="col-span-3">
+              <div v-for="(item, i) in form.items" :key="i" class="grid grid-cols-2 sm:grid-cols-12 gap-2 mb-3 items-end border sm:border-0 border-gray-100 rounded-lg p-2 sm:p-0">
+                <div class="col-span-2 sm:col-span-3">
                   <select v-model="item.product" @change="onProductSelect(item)" class="input text-xs">
                     <option value="">منتج مخصص</option>
                     <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
                   </select>
                 </div>
-                <div class="col-span-3"><input v-model="item.description" class="input text-xs" placeholder="الوصف" required /></div>
-                <div class="col-span-2"><input v-model.number="item.quantity" type="number" class="input text-xs" min="1" placeholder="الكمية" /></div>
-                <div class="col-span-2"><input v-model.number="item.unitPrice" type="number" class="input text-xs" min="0" placeholder="السعر" dir="ltr" /></div>
-                <div class="col-span-1"><input v-model.number="item.discount" type="number" class="input text-xs" min="0" max="100" placeholder="%" /></div>
-                <div class="col-span-1">
-                  <button v-if="form.items.length > 1" type="button" @click="removeItem(i)" class="text-red-500 text-xs hover:text-red-700 w-full text-center">✕</button>
+                <div class="col-span-2 sm:col-span-3"><input v-model="item.description" class="input text-xs" placeholder="الوصف" required /></div>
+                <div class="col-span-1 sm:col-span-2"><input v-model.number="item.quantity" type="number" class="input text-xs" min="1" placeholder="الكمية" /></div>
+                <div class="col-span-1 sm:col-span-2"><input v-model.number="item.unitPrice" type="number" class="input text-xs" min="0" placeholder="السعر" dir="ltr" /></div>
+                <div class="col-span-1 sm:col-span-1"><input v-model.number="item.discount" type="number" class="input text-xs" min="0" max="100" placeholder="%" /></div>
+                <div class="col-span-1 sm:col-span-1">
+                  <button v-if="form.items.length > 1" type="button" @click="removeItem(i)" class="text-red-500 text-xs hover:text-red-700 w-full text-center">✕ حذف</button>
                 </div>
               </div>
             </div>

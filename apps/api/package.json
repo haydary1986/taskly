@@ -22,6 +22,7 @@
     "jose": "^5.9.6",
     "jsonwebtoken": "^9",
     "next": "15.5.10",
+    "open-location-code": "^1.0.3",
     "otpauth": "^9.5.0",
     "payload": "^3",
     "pino": "^10.3.1",
@@ -33,6 +34,7 @@
     "socket.io": "^4",
     "tsx": "^4",
     "web-push": "^3.6.7",
+    "xlsx": "^0.18.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {

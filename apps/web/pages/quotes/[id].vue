@@ -27,6 +27,23 @@ async function changeStatus(status: string) {
   } catch { toast.error('خطأ') }
 }
 
+const creatingInvoice = ref(false)
+async function createInvoice(): Promise<void> {
+  creatingInvoice.value = true
+  try {
+    const res = await api.post('/v1/crm/invoices/from-quote', { quoteId: quote.value.id })
+    if (res.invoice?.id) {
+      toast.success('تم إنشاء الفاتورة')
+      await navigateTo(`/invoices/${res.invoice.id}`)
+    }
+  } catch (err: any) {
+    const msg = err?.data?.error || err?.message || 'فشل إنشاء الفاتورة'
+    toast.error(msg)
+  } finally {
+    creatingInvoice.value = false
+  }
+}
+
 function formatCurrency(val: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.value?.currency || 'USD', maximumFractionDigits: 2 }).format(val)
 }
@@ -54,10 +71,16 @@ function printQuote() {
           <span class="badge text-sm" :class="statusColors[quote.status]">{{ statusLabels[quote.status] }}</span>
         </div>
         <div class="flex gap-2">
-          <button @click="printQuote" class="btn-secondary text-sm">طباعة</button>
+          <button @click="printQuote" class="btn-secondary text-sm">🖨 طباعة</button>
           <button v-if="quote.status === 'draft'" @click="changeStatus('sent')" class="btn-primary text-sm">إرسال</button>
           <button v-if="quote.status === 'sent'" @click="changeStatus('accepted')" class="bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-green-600">قبول</button>
           <button v-if="quote.status === 'sent'" @click="changeStatus('rejected')" class="bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-red-600">رفض</button>
+          <button
+            v-if="quote.status === 'accepted'"
+            :disabled="creatingInvoice"
+            class="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-purple-700 disabled:opacity-50"
+            @click="createInvoice"
+          >{{ creatingInvoice ? 'جاري...' : '📄 إنشاء فاتورة' }}</button>
         </div>
       </div>
     </div>

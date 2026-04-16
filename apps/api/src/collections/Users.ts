@@ -20,7 +20,7 @@ export const Users: CollectionConfig = {
   },
   access: {
     create: isAdmin,
-    read: hasRoleOrSelf('super-admin', 'supervisor', 'auditor'),
+    read: ({ req }) => !!req.user,
     update: hasRoleOrSelf('super-admin', 'supervisor', 'auditor'),
     delete: isSuperAdmin,
   },
@@ -50,7 +50,7 @@ export const Users: CollectionConfig = {
       saveToJWT: true,
       label: 'الدور',
       access: {
-        read: managementFieldAccess,
+        read: () => true,
         create: managementFieldAccess,
         update: managementFieldAccess,
       },
@@ -183,8 +183,8 @@ export const Users: CollectionConfig = {
             } as any,
             overrideAccess: true,
           })
-        } catch {
-          // Silently fail — don't break login flow
+        } catch (err) {
+          req.payload.logger.warn({ err }, '[Users.afterError] Failed to write login-log')
         }
       },
     ],

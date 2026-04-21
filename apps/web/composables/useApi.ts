@@ -8,6 +8,9 @@ export function useApi() {
   // Nuxt's runtimeConfig sets apiBase to "" (empty string) if the Coolify Environment variable is unset/empty.
   // We must explicitly ensure we don't fetch from an empty base URL resulting in 404s.
   const resolvedApiBase = config.public.apiBase || 'https://api-task.algonest.tech'
+  if (!config.public.apiBase && import.meta.client) {
+    console.warn('[useApi] NUXT_PUBLIC_API_BASE is not set — falling back to production URL')
+  }
 
   // Payload's REST API expects bracket notation for nested filters
   // (e.g. where[room][equals]=X). ofetch's default serializer emits

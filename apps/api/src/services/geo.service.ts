@@ -59,8 +59,20 @@ export function isImpossibleTravel(
 export function isWithinRadius(
     visitLocation: [number, number],
     clientLocation: [number, number],
-    radiusMeters = 500,
+    radiusMeters = 200,
 ): { distance: number; isValid: boolean } {
     const distance = haversineMeters(visitLocation, clientLocation)
     return { distance, isValid: distance <= radiusMeters }
+}
+
+/** Detect if a rep keeps checking in from the same coordinates (likely home) */
+export function isSameLocation(
+    locations: [number, number][],
+    thresholdMeters = 50,
+    minOccurrences = 3,
+): boolean {
+    if (locations.length < minOccurrences) return false
+    const reference = locations[0]
+    const sameCount = locations.filter(loc => haversineMeters(reference, loc) < thresholdMeters).length
+    return sameCount >= minOccurrences
 }

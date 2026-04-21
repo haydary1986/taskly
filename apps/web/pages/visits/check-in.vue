@@ -20,6 +20,53 @@ const result = ref<any>(null)
 const gpsStatus = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
 const gpsError = ref('')
 const location = ref<[number, number] | null>(null)
+const gpsAccuracy = ref<number | null>(null)
+
+// Selfie state
+const selfieData = ref<string | null>(null)
+const showCamera = ref(false)
+const videoEl = ref<HTMLVideoElement | null>(null)
+const cameraStream = ref<MediaStream | null>(null)
+
+async function openCamera() {
+  showCamera.value = true
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: 640, height: 480 },
+    })
+    cameraStream.value = stream
+    await nextTick()
+    if (videoEl.value) {
+      videoEl.value.srcObject = stream
+      videoEl.value.play()
+    }
+  } catch {
+    toast.error('فشل فتح الكاميرا — تأكد من صلاحية الكاميرا')
+    showCamera.value = false
+  }
+}
+
+function captureSelfie() {
+  if (!videoEl.value) return
+  const canvas = document.createElement('canvas')
+  canvas.width = videoEl.value.videoWidth || 640
+  canvas.height = videoEl.value.videoHeight || 480
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(videoEl.value, 0, 0)
+  selfieData.value = canvas.toDataURL('image/jpeg', 0.7)
+  closeCamera()
+}
+
+function closeCamera() {
+  cameraStream.value?.getTracks().forEach(t => t.stop())
+  cameraStream.value = null
+  showCamera.value = false
+}
+
+function retakeSelfie() {
+  selfieData.value = null
+  openCamera()
+}
 
 // Create client inline
 const showCreateClient = ref(false)
@@ -81,7 +128,11 @@ function captureGPS() {
   gpsStatus.value = 'loading'
   gpsError.value = ''
   navigator.geolocation.getCurrentPosition(
-    (pos) => { location.value = [pos.coords.longitude, pos.coords.latitude]; gpsStatus.value = 'success' },
+    (pos) => {
+      location.value = [pos.coords.longitude, pos.coords.latitude]
+      gpsAccuracy.value = Math.round(pos.coords.accuracy)
+      gpsStatus.value = 'success'
+    },
     (err) => { gpsError.value = err.message; gpsStatus.value = 'error' },
     { enableHighAccuracy: true, timeout: 15000 },
   )
@@ -138,11 +189,37 @@ const { isOnline } = useNetworkStatus()
 
 async function handleCheckIn() {
   if (!selectedClient.value || !location.value) return
+
+  // Require selfie
+  if (!selfieData.value) {
+    toast.error('التقط صورة سيلفي أولاً لإثبات تواجدك')
+    return
+  }
+
+  // Warn on low GPS accuracy (likely fake/VPN)
+  if (gpsAccuracy.value && gpsAccuracy.value > 150) {
+    toast.error(`دقة GPS ضعيفة (${gpsAccuracy.value}م) — انتقل لمكان مفتوح وأعد تحديد الموقع`)
+    return
+  }
+
   checkingIn.value = true
+
+  // Upload selfie first
+  let photoId: string | undefined
+  try {
+    const blob = await fetch(selfieData.value).then(r => r.blob())
+    const file = new File([blob], `checkin-${Date.now()}.jpg`, { type: 'image/jpeg' })
+    const mediaRes = await api.upload(file, 'صورة إثبات حضور')
+    photoId = mediaRes.doc?.id || mediaRes.id
+  } catch {
+    toast.warning('فشل رفع الصورة — سيتم التسجيل بدون صورة')
+  }
 
   const payload = {
     clientId: selectedClient.value.id,
     location: location.value,
+    photo: photoId,
+    gpsAccuracy: gpsAccuracy.value,
   }
 
   // If offline, queue and show success with a note
@@ -342,6 +419,42 @@ async function handleCreateClient() {
           >
             📍 {{ gpsStatus === 'success' ? 'تحديث' : 'تحديد' }}
           </button>
+        </div>
+        <div v-if="gpsAccuracy !== null" class="mt-2 text-[10px]" :class="gpsAccuracy > 150 ? 'text-red-500 font-bold' : gpsAccuracy > 50 ? 'text-yellow-600' : 'text-green-600'">
+          دقة الموقع: {{ gpsAccuracy }} متر
+          <span v-if="gpsAccuracy > 150"> — ⚠️ دقة ضعيفة، انتقل لمكان مفتوح</span>
+        </div>
+      </div>
+
+      <!-- Selfie capture -->
+      <div class="card mb-4 !py-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="h-3 w-3 rounded-full shrink-0" :class="selfieData ? 'bg-green-500' : 'bg-gray-400'" />
+            <span class="text-sm" :class="selfieData ? 'text-green-700' : 'text-gray-500'">
+              {{ selfieData ? 'تم التقاط الصورة' : 'صورة إثبات الحضور (إجبارية)' }}
+            </span>
+          </div>
+          <button v-if="!selfieData && !showCamera" @click="openCamera" class="btn-secondary text-sm min-w-[88px] min-h-[44px]">
+            📷 التقط سيلفي
+          </button>
+          <button v-if="selfieData" @click="retakeSelfie" class="text-xs text-primary-600 hover:underline">
+            إعادة التقاط
+          </button>
+        </div>
+        <!-- Camera preview -->
+        <div v-if="showCamera" class="mt-3">
+          <video ref="videoEl" autoplay playsinline muted class="w-full max-w-sm mx-auto rounded-lg bg-black" style="transform: scaleX(-1)" />
+          <div class="mt-2 flex justify-center gap-3">
+            <button @click="captureSelfie" class="rounded-full bg-red-500 p-3 text-white hover:bg-red-600">
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /></svg>
+            </button>
+            <button @click="closeCamera" class="btn-secondary text-xs">إلغاء</button>
+          </div>
+        </div>
+        <!-- Selfie preview -->
+        <div v-if="selfieData && !showCamera" class="mt-3 flex justify-center">
+          <img :src="selfieData" alt="صورة الحضور" class="w-32 h-32 rounded-lg object-cover border-2 border-green-300" style="transform: scaleX(-1)" />
         </div>
       </div>
 

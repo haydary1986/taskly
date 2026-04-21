@@ -10,7 +10,11 @@ export const Users: CollectionConfig = {
     cookies: {
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
-      domain: process.env.NODE_ENV === 'production' ? 'api-task.algonest.tech' : undefined,
+      // Shared across all *.algonest.tech subdomains so the web app
+      // (task.algonest.tech) can read the cookie set by the API
+      // (api-task.algonest.tech). Override with AUTH_COOKIE_DOMAIN env var.
+      domain: process.env.AUTH_COOKIE_DOMAIN
+        || (process.env.NODE_ENV === 'production' ? '.algonest.tech' : undefined),
     },
   },
   admin: {

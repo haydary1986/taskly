@@ -19,6 +19,10 @@ services:
       - PAYLOAD_SECRET=${PAYLOAD_SECRET}
       - NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
       - FRONTEND_URL=${FRONTEND_URL}
+      - AUTH_COOKIE_DOMAIN=${AUTH_COOKIE_DOMAIN:-.algonest.tech}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - ADMIN_NAME=${ADMIN_NAME:-}
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
       - api_media:/app/apps/api/media

@@ -14,9 +14,14 @@ export const seedAdmin = async () => {
             limit: 1,
         })
 
-        const email = process.env.ADMIN_EMAIL || 'haydary1986@gmail.com'
-        const password = process.env.ADMIN_PASSWORD || 'Sakina1990'
+        const email = process.env.ADMIN_EMAIL
+        const password = process.env.ADMIN_PASSWORD
         const name = process.env.ADMIN_NAME || 'مدير النظام'
+
+        if (!email || !password) {
+            console.error('❌ ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required.')
+            process.exit(1)
+        }
 
         if (existingAdmins.totalDocs > 0) {
             console.log(`⚠️ A super-admin already exists. Forcing credential update to ${email}...`)

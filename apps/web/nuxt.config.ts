@@ -68,7 +68,7 @@ export default defineNuxtConfig({
   },
 
   pwa: {
-    registerType: 'prompt',
+    registerType: 'autoUpdate',
     manifest: {
       name: 'Taskly - ALGO-NEST',
       short_name: 'Taskly',
@@ -150,6 +150,8 @@ export default defineNuxtConfig({
     },
     client: {
       installPrompt: true,
+      // Periodically check for new SW (every 60s) so deploys reach users without manual reload
+      periodicSyncForUpdates: 60,
     },
     devOptions: {
       enabled: false,

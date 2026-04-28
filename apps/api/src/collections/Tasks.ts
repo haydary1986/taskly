@@ -253,6 +253,28 @@ export const Tasks: CollectionConfig = {
         position: 'sidebar',
       },
     },
+    {
+      name: 'timeEntries',
+      type: 'join',
+      collection: 'time-entries',
+      on: 'task',
+      label: 'فقرات العمل',
+      admin: { description: 'فقرات العمل المسجلة على هذه المهمة' },
+    },
+    {
+      name: 'comments',
+      type: 'join',
+      collection: 'task-comments',
+      on: 'task',
+      label: 'التعليقات',
+    },
+    {
+      name: 'activities',
+      type: 'join',
+      collection: 'task-activities',
+      on: 'task',
+      label: 'سجل النشاط',
+    },
   ],
   timestamps: true,
 }

@@ -35,8 +35,13 @@ export const TimeEntries: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ data, operation, req }) => {
+        // On create: default user to the current user, but allow admins
+        // to log a session on behalf of someone else (e.g., manager
+        // back-filling for an employee).
         if (operation === 'create' && req.user) {
-          data.user = req.user.id
+          if (!data.user || !ADMIN_ROLES.includes(req.user.role as never)) {
+            data.user = req.user.id
+          }
         }
         if (data?.startTime && data?.endTime) {
           const start = new Date(data.startTime).getTime()
@@ -52,10 +57,15 @@ export const TimeEntries: CollectionConfig = {
       name: 'user',
       type: 'relationship',
       relationTo: 'users',
-      required: true,
       label: 'المستخدم',
-      admin: { readOnly: true },
+      // Not required at the schema level: the beforeChange hook fills it
+      // for non-admins and admins can pick another user. Admins editing in
+      // the Payload admin can change the owner; non-admins cannot
+      // (enforced by the hook above).
       index: true,
+      admin: {
+        description: 'يُملأ تلقائياً بمستخدم الجلسة الحالي. المدير يستطيع اختيار موظف آخر.',
+      },
     },
     {
       name: 'task',

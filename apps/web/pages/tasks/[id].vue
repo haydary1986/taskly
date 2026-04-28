@@ -48,12 +48,20 @@ const totalDurationLabel = computed(() => {
   return h ? `${h}س ${r}د` : `${r}د`
 })
 
-const canManageEntries = computed(() => {
+// Only the task assignee can ADD a session.
+const isAssignee = computed(() => {
   if (!task.value || !authStore.user) return false
-  if (authStore.isManagement) return true
   const assigneeId = typeof task.value.assignee === 'object' ? task.value.assignee?.id : task.value.assignee
   return assigneeId === authStore.user.id
 })
+
+// Either the assignee (own entry) or management can EDIT / DELETE.
+function canEditEntry(entry: TimeEntry): boolean {
+  if (authStore.isManagement) return true
+  if (!authStore.user) return false
+  const ownerId = typeof entry.user === 'object' ? entry.user?.id : entry.user
+  return ownerId === authStore.user.id
+}
 
 function formatDuration(minutes?: number | null) {
   if (!minutes) return '—'
@@ -333,8 +341,8 @@ onMounted(fetchData)
                 <span class="text-sm font-bold text-primary-900">{{ totalDurationLabel }}</span>
               </div>
 
-              <!-- Add / edit form (only assignee or management) -->
-              <div v-if="canManageEntries" class="mb-4 space-y-3 rounded-lg border border-gray-200 p-3">
+              <!-- Add / edit form: only the assignee adds; management can edit existing via the row action -->
+              <div v-if="isAssignee || editingEntryId" class="mb-4 space-y-3 rounded-lg border border-gray-200 p-3">
                 <textarea
                   v-model="entryDescription"
                   rows="2"
@@ -392,10 +400,7 @@ onMounted(fetchData)
                     <span>من {{ formatDate(entry.startTime) }}</span>
                     <span v-if="entry.endTime">إلى {{ formatDate(entry.endTime) }}</span>
                   </div>
-                  <div
-                    v-if="(typeof entry.user === 'object' && entry.user?.id === authStore.user?.id) || authStore.isManagement"
-                    class="mt-2 flex justify-end gap-3"
-                  >
+                  <div v-if="canEditEntry(entry)" class="mt-2 flex justify-end gap-3">
                     <button @click="startEditEntry(entry)" class="text-xs text-primary-600 hover:underline">تعديل</button>
                     <button @click="deleteEntry(entry.id)" class="text-xs text-red-600 hover:underline">حذف</button>
                   </div>

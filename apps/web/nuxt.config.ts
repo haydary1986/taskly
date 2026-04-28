@@ -88,63 +88,54 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: '/',
-      globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
+      // Make sure clients move to the new SW immediately on update
+      clientsClaim: true,
+      skipWaiting: true,
+      // Don't precache HTML — only fingerprinted static assets. HTML must
+      // always be fetched from the network so users get the latest app shell.
+      globPatterns: ['**/*.{js,css,png,svg,ico,woff2}'],
       runtimeCaching: [
+        // Static third-party assets: safe to cache long-term (immutable URLs)
         {
-          urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+          urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
           handler: 'CacheFirst',
-          options: { cacheName: 'google-fonts-cache', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }, cacheableResponse: { statuses: [0, 200] } },
-        },
-        {
-          urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-          handler: 'CacheFirst',
-          options: { cacheName: 'gstatic-fonts-cache', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }, cacheableResponse: { statuses: [0, 200] } },
-        },
-        {
-          urlPattern: /\/api\/(dashboard-stats|projects|tasks)(\?.*)?$/i,
-          handler: 'StaleWhileRevalidate',
-          options: { cacheName: 'api-stale-cache', expiration: { maxEntries: 50, maxAgeSeconds: 60 * 30 }, cacheableResponse: { statuses: [0, 200] } },
-        },
-        {
-          urlPattern: /\/api\/leads(\?.*)?$/i,
-          handler: 'StaleWhileRevalidate',
           options: {
-            cacheName: 'leads-cache',
-            expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 },
+            cacheName: 'fonts-cache',
+            expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
             cacheableResponse: { statuses: [0, 200] },
           },
         },
-        {
-          urlPattern: /\/api\/(clients|companies|visits|deals)(\?.*)?$/i,
-          handler: 'StaleWhileRevalidate',
-          options: {
-            cacheName: 'crm-cache',
-            expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 2 },
-            cacheableResponse: { statuses: [0, 200] },
-          },
-        },
+        // OSM map tiles: heavy + immutable per URL
         {
           urlPattern: /https?:\/\/[a-z]+\.tile\.openstreetmap\.org\/.*/i,
           handler: 'CacheFirst',
           options: {
-            cacheName: 'osm-tiles-cache',
+            cacheName: 'osm-tiles',
             expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 30 },
             cacheableResponse: { statuses: [0, 200] },
           },
         },
+        // Uploaded media (images, files): URL is content-hashed by Payload
         {
           urlPattern: /\/api\/media\/.*/i,
           handler: 'CacheFirst',
-          options: { cacheName: 'media-cache', expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 }, cacheableResponse: { statuses: [0, 200] } },
+          options: {
+            cacheName: 'media-cache',
+            expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
         },
-        {
-          urlPattern: /\/api\/users\/me/i,
-          handler: 'NetworkOnly',
-        },
+        // ALL other /api/* (data, auth, mutations): always go to network.
+        // Falls back to cache only when the user is offline.
         {
           urlPattern: /\/api\/.*$/i,
           handler: 'NetworkFirst',
-          options: { cacheName: 'api-cache', expiration: { maxEntries: 100, maxAgeSeconds: 60 * 5 }, cacheableResponse: { statuses: [0, 200] }, networkTimeoutSeconds: 10 },
+          options: {
+            cacheName: 'api-fallback',
+            networkTimeoutSeconds: 5,
+            expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
         },
       ],
     },
@@ -160,6 +151,18 @@ export default defineNuxtConfig({
 
   tailwindcss: {
     cssPath: '~/assets/css/main.css',
+  },
+
+  // Per-route HTTP caching: HTML never cached, fingerprinted assets cached forever.
+  routeRules: {
+    // App shell / pages: must always revalidate so a deploy is picked up.
+    '/**': { headers: { 'Cache-Control': 'no-cache, must-revalidate' } },
+    // Nuxt asset bundles: filenames carry a content hash, safe to cache long-term.
+    '/_nuxt/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
+    // Service worker file MUST not be cached or users can never get a new SW.
+    '/sw.js': { headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } },
+    '/workbox-*.js': { headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } },
+    '/manifest.webmanifest': { headers: { 'Cache-Control': 'no-cache' } },
   },
 
   typescript: {

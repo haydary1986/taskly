@@ -48,14 +48,15 @@ const totalDurationLabel = computed(() => {
   return h ? `${h}س ${r}د` : `${r}د`
 })
 
-// Only the task assignee can ADD a session.
-const isAssignee = computed(() => {
+// Assignee or management can ADD a session.
+const canAddEntry = computed(() => {
   if (!task.value || !authStore.user) return false
+  if (authStore.isManagement) return true
   const assigneeId = typeof task.value.assignee === 'object' ? task.value.assignee?.id : task.value.assignee
   return assigneeId === authStore.user.id
 })
 
-// Either the assignee (own entry) or management can EDIT / DELETE.
+// Either the entry owner or management can EDIT / DELETE.
 function canEditEntry(entry: TimeEntry): boolean {
   if (authStore.isManagement) return true
   if (!authStore.user) return false
@@ -341,8 +342,8 @@ onMounted(fetchData)
                 <span class="text-sm font-bold text-primary-900">{{ totalDurationLabel }}</span>
               </div>
 
-              <!-- Add / edit form: only the assignee adds; management can edit existing via the row action -->
-              <div v-if="isAssignee || editingEntryId" class="mb-4 space-y-3 rounded-lg border border-gray-200 p-3">
+              <!-- Add / edit form: assignee or management can add; either can also edit existing entries via row action -->
+              <div v-if="canAddEntry || editingEntryId" class="mb-4 space-y-3 rounded-lg border border-gray-200 p-3">
                 <textarea
                   v-model="entryDescription"
                   rows="2"

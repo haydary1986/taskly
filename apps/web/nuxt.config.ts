@@ -87,8 +87,8 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: '/',
-      // Make sure clients move to the new SW immediately on update
+      // No navigateFallback — we don't precache HTML, so falling back to '/'
+      // would error with non-precached-url. Online-first behavior is fine.
       clientsClaim: true,
       skipWaiting: true,
       // Don't precache HTML — only fingerprinted static assets. HTML must

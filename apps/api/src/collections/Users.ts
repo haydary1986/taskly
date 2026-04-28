@@ -70,8 +70,10 @@ export const Users: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
       label: 'نشط',
+      // Readable by anyone (low-sensitivity flag); only management can edit.
+      // Required so non-admins can filter user lists by isActive in queries
+      // (chat member picker, task assignee picker, etc.).
       access: {
-        read: managementFieldAccess,
         create: managementFieldAccess,
         update: managementFieldAccess,
       },

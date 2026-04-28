@@ -25,7 +25,7 @@ export const inbox: PayloadHandler = async (req) => {
     // 2. Unread messages (rooms where user is a member, latest unread)
     const rooms = await payload.find({
         collection: 'chat-rooms',
-        where: { members: { contains: user.id } },
+        where: { members: { equals: user.id } },
         limit: 50,
         depth: 0,
     })

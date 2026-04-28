@@ -14,7 +14,8 @@ export const ChatRooms: CollectionConfig = {
       if (!req.user) return false
       const role = req.user.role as string
       if (['super-admin', 'supervisor'].includes(role)) return true
-      return { members: { contains: req.user.id } }
+      // For relationship hasMany fields, `equals` matches when any related ID equals the value
+      return { members: { equals: req.user.id } }
     },
     update: ({ req }) => {
       if (!req.user) return false

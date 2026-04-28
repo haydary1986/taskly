@@ -18,7 +18,7 @@ export async function fireWebhook(
             collection: 'webhooks',
             where: {
                 isActive: { equals: true },
-                events: { contains: event },
+                events: { equals: event },
             },
             limit: 50,
             overrideAccess: true,

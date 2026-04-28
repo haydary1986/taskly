@@ -37,7 +37,7 @@ export const ChatMessages: CollectionConfig = {
       try {
         const rooms = await req.payload.find({
           collection: 'chat-rooms',
-          where: { members: { contains: req.user.id } },
+          where: { members: { equals: req.user.id } },
           limit: 1000,
           depth: 0,
           overrideAccess: true,

@@ -5,11 +5,21 @@ const route = useRoute()
 const api = useApi()
 const authStore = useAuthStore()
 
+interface TimeEntry {
+  id: string
+  description?: string
+  startTime: string
+  endTime?: string | null
+  duration?: number | null
+  user?: { id: string; name?: string } | string
+}
+
 const task = ref<any>(null)
 const comments = ref<any[]>([])
 const activities = ref<any[]>([])
+const timeEntries = ref<TimeEntry[]>([])
 const loading = ref(true)
-const activeTab = ref<'comments' | 'activity'>('comments')
+const activeTab = ref<'comments' | 'activity' | 'sessions'>('sessions')
 
 // Comment form
 const newComment = ref('')
@@ -18,6 +28,99 @@ const submittingComment = ref(false)
 
 // Status update
 const updatingStatus = ref(false)
+
+// Time entry form
+const entryDescription = ref('')
+const entryStart = ref('')
+const entryEnd = ref('')
+const submittingEntry = ref(false)
+const editingEntryId = ref<string | null>(null)
+
+const totalMinutes = computed(() =>
+  timeEntries.value.reduce((sum, e) => sum + (e.duration || 0), 0),
+)
+
+const totalDurationLabel = computed(() => {
+  const m = totalMinutes.value
+  if (!m) return '0د'
+  const h = Math.floor(m / 60)
+  const r = m % 60
+  return h ? `${h}س ${r}د` : `${r}د`
+})
+
+const canManageEntries = computed(() => {
+  if (!task.value || !authStore.user) return false
+  if (authStore.isManagement) return true
+  const assigneeId = typeof task.value.assignee === 'object' ? task.value.assignee?.id : task.value.assignee
+  return assigneeId === authStore.user.id
+})
+
+function formatDuration(minutes?: number | null) {
+  if (!minutes) return '—'
+  const h = Math.floor(minutes / 60)
+  const r = minutes % 60
+  return h ? `${h}س ${r}د` : `${r}د`
+}
+
+function toLocalDateTimeInput(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function resetEntryForm() {
+  entryDescription.value = ''
+  entryStart.value = ''
+  entryEnd.value = ''
+  editingEntryId.value = null
+}
+
+function startEditEntry(entry: TimeEntry) {
+  editingEntryId.value = entry.id
+  entryDescription.value = entry.description || ''
+  entryStart.value = entry.startTime ? toLocalDateTimeInput(new Date(entry.startTime)) : ''
+  entryEnd.value = entry.endTime ? toLocalDateTimeInput(new Date(entry.endTime)) : ''
+}
+
+async function submitEntry() {
+  if (!entryStart.value || !entryEnd.value || !entryDescription.value.trim()) return
+  submittingEntry.value = true
+  try {
+    const payload = {
+      task: route.params.id,
+      description: entryDescription.value.trim(),
+      startTime: new Date(entryStart.value).toISOString(),
+      endTime: new Date(entryEnd.value).toISOString(),
+    }
+    if (editingEntryId.value) {
+      await api.patch(`/time-entries/${editingEntryId.value}`, payload)
+    } else {
+      await api.post('/time-entries', payload)
+    }
+    resetEntryForm()
+    await fetchTimeEntries()
+  } catch (err) {
+    console.error('Failed to save time entry:', err)
+  } finally {
+    submittingEntry.value = false
+  }
+}
+
+async function deleteEntry(id: string) {
+  if (!confirm('حذف هذه الفقرة؟')) return
+  try {
+    await api.del(`/time-entries/${id}`)
+    timeEntries.value = timeEntries.value.filter((e) => e.id !== id)
+  } catch (err) {
+    console.error('Failed to delete time entry:', err)
+  }
+}
+
+async function fetchTimeEntries() {
+  const data = await api.get(
+    `/time-entries?where[task][equals]=${route.params.id}&sort=startTime&depth=1&limit=200`,
+  )
+  timeEntries.value = data.docs || []
+}
 
 const statusOptions = [
   { label: 'جديدة', value: 'new' },
@@ -52,14 +155,16 @@ const activityLabels: Record<string, string> = {
 async function fetchData() {
   loading.value = true
   try {
-    const [taskData, commentsData, activitiesData] = await Promise.all([
+    const [taskData, commentsData, activitiesData, entriesData] = await Promise.all([
       api.get(`/tasks/${route.params.id}?depth=2`),
       api.get(`/task-comments?where[task][equals]=${route.params.id}&sort=-createdAt&depth=1&limit=100`),
       api.get(`/task-activities?where[task][equals]=${route.params.id}&sort=-createdAt&depth=1&limit=100`),
+      api.get(`/time-entries?where[task][equals]=${route.params.id}&sort=startTime&depth=1&limit=200`),
     ])
     task.value = taskData
     comments.value = commentsData.docs || []
     activities.value = activitiesData.docs || []
+    timeEntries.value = entriesData.docs || []
   } catch (err) {
     console.error('Failed to fetch task:', err)
   } finally {
@@ -194,9 +299,16 @@ onMounted(fetchData)
             </div>
           </div>
 
-          <!-- Tabs: Comments / Activity -->
+          <!-- Tabs: Sessions / Comments / Activity -->
           <div class="card p-0">
             <div class="flex border-b border-gray-200">
+              <button
+                @click="activeTab = 'sessions'"
+                class="flex-1 px-4 py-3 text-sm font-medium transition-colors"
+                :class="activeTab === 'sessions' ? 'border-b-2 border-primary-500 text-primary-700' : 'text-gray-500 hover:text-gray-700'"
+              >
+                فقرات العمل ({{ timeEntries.length }})
+              </button>
               <button
                 @click="activeTab = 'comments'"
                 class="flex-1 px-4 py-3 text-sm font-medium transition-colors"
@@ -211,6 +323,85 @@ onMounted(fetchData)
               >
                 سجل النشاط ({{ activities.length }})
               </button>
+            </div>
+
+            <!-- Sessions tab -->
+            <div v-if="activeTab === 'sessions'" class="p-4">
+              <!-- Total duration banner -->
+              <div class="mb-4 flex items-center justify-between rounded-lg border border-primary-100 bg-primary-50 px-3 py-2">
+                <span class="text-xs text-primary-700">إجمالي الوقت</span>
+                <span class="text-sm font-bold text-primary-900">{{ totalDurationLabel }}</span>
+              </div>
+
+              <!-- Add / edit form (only assignee or management) -->
+              <div v-if="canManageEntries" class="mb-4 space-y-3 rounded-lg border border-gray-200 p-3">
+                <textarea
+                  v-model="entryDescription"
+                  rows="2"
+                  class="input"
+                  placeholder="وصف الفقرة (مثلاً: تصميم schema الباك إند)"
+                />
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label class="label text-xs">من</label>
+                    <input v-model="entryStart" type="datetime-local" class="input" />
+                  </div>
+                  <div>
+                    <label class="label text-xs">إلى</label>
+                    <input v-model="entryEnd" type="datetime-local" class="input" />
+                  </div>
+                </div>
+                <div class="flex items-center justify-end gap-2">
+                  <button
+                    v-if="editingEntryId"
+                    @click="resetEntryForm"
+                    type="button"
+                    class="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    @click="submitEntry"
+                    :disabled="submittingEntry || !entryStart || !entryEnd || !entryDescription.trim()"
+                    class="btn-primary text-xs"
+                  >
+                    {{ submittingEntry ? 'جاري الحفظ...' : editingEntryId ? 'تحديث الفقرة' : 'إضافة فقرة' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Entries list -->
+              <div v-if="timeEntries.length" class="space-y-3">
+                <div
+                  v-for="entry in timeEntries"
+                  :key="entry.id"
+                  class="rounded-lg border border-gray-100 bg-gray-50 p-3"
+                >
+                  <div class="mb-2 flex items-start justify-between gap-2">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm text-gray-800 whitespace-pre-wrap">{{ entry.description || '—' }}</p>
+                      <p class="mt-1 text-xs text-gray-500">
+                        {{ typeof entry.user === 'object' ? entry.user?.name : '' }}
+                      </p>
+                    </div>
+                    <span class="shrink-0 rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">
+                      {{ formatDuration(entry.duration) }}
+                    </span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                    <span>من {{ formatDate(entry.startTime) }}</span>
+                    <span v-if="entry.endTime">إلى {{ formatDate(entry.endTime) }}</span>
+                  </div>
+                  <div
+                    v-if="(typeof entry.user === 'object' && entry.user?.id === authStore.user?.id) || authStore.isManagement"
+                    class="mt-2 flex justify-end gap-3"
+                  >
+                    <button @click="startEditEntry(entry)" class="text-xs text-primary-600 hover:underline">تعديل</button>
+                    <button @click="deleteEntry(entry.id)" class="text-xs text-red-600 hover:underline">حذف</button>
+                  </div>
+                </div>
+              </div>
+              <p v-else class="py-6 text-center text-sm text-gray-400">لم تُضف أي فقرة بعد</p>
             </div>
 
             <!-- Comments tab -->

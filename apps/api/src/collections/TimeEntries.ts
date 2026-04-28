@@ -8,13 +8,12 @@ export const TimeEntries: CollectionConfig = {
     group: 'البرمجة',
   },
   access: {
-    create: ({ req }) => {
-      if (!req.user) return false
-      return ['super-admin', 'supervisor', 'programmer'].includes(req.user.role as string)
-    },
+    // Any authenticated user can log time on a task they are assigned to.
+    // The hook below forces `user = req.user.id` so users cannot log time for someone else.
+    create: ({ req }) => !!req.user,
     read: adminOrOwn('user'),
     update: adminOrOwn('user'),
-    delete: isAdmin,
+    delete: adminOrOwn('user'),
   },
   hooks: {
     beforeChange: [
